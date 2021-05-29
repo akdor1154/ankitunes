@@ -38,6 +38,8 @@ class TuneOverview:
 			"Practice Sets",
 			id="study_sets"
 		)
+		# if this grows beyond more than 3 lines then turn it into TS and inject into a handler
+		# with the webview_set_content hook
 		self.overview.web.eval(f'''
 			const studyButton = document.getElementById('study');
 			const parent = studyButton.parentNode;
