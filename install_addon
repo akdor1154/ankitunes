@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# install in-place dev version of addon.
+
+set -e
+
+THIS_ADDON_DIR=$(pwd)
+ADDONS_DIR="${HOME}/.local/share/Anki2/addons21"
+
+cd "${ADDONS_DIR}"
+
+#ln -sf "${THIS_ADDON_DIR}/ankitunes_plugin.py" .
+ln -sf "${THIS_ADDON_DIR}/ankitunes" .
+

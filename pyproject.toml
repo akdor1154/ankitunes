@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "ankitunes"
+version = "0.1.0"
+description = ""
+authors = ["Jarrad Whitaker <akdor1154@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+aqt = "^2.1.44"
+mypy = "^0.812"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
