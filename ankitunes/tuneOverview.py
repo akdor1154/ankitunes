@@ -50,6 +50,12 @@ class TuneOverview:
 		return TuneOverview.ensure_exists(overview).overview_did_refresh()
 
 	def webview_did_receive_js_message(self, handled: Tuple[bool, Any], message: str) -> Tuple[bool, Any]:
+		# Private API call to _linkHandler is currently required.
+		# if Anki ever change to have
+		#   overview.study()
+		# or even better
+		#  (this handler can modify the cmd that gets processed)
+		# then _linkHandler() call can be removed.
 		if message == 'study_sets':
 			tuneReviewer.is_reviewing_tunes = True
 			self.overview._linkHandler('study')
