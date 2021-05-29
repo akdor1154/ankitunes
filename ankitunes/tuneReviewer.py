@@ -49,16 +49,37 @@ aqt.gui_hooks.webview_will_set_content.append(set_up_reviewer_bottom)
 
 def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -> Sequence[Card]:
 
+	focus_note = focus_card.note()
 	# get extra cards from scheduler
-	tuneTypeField = focus_card.note()['Tune Type']
+	tuneTypeField = focus_note['Tune Type']
 	key, tuneType = tuneTypeField.split(' ', 1)
 
+	# readability
+	def join(a: Union[str, SearchNode], op: anki.collection.SearchJoiner, b: Union[str, SearchNode]) -> SearchNode:
+		return col.group_searches(a, b, joiner=op)
 
-	all_others = col.find_cards(
-		f'"Tune Type:* {tuneType}"',
-		order='RANDOM()'
+	SET_NUM_TUNES = 2
+
+	search = (
+		join(
+			join(
+				f'"Tune Type:* {tuneType}"',
+				'OR',
+				f'"Tune Type:{tuneType}"',
+			),
+			'AND',
+			SearchNode(negated=SearchNode(nid=focus_card.nid))
+		)
 	)
-	other_ids = all_others[:1]
+	searchStr = col.build_search_string(search)
+	print(f'searching for {searchStr}')
+
+	searchLimit = SET_NUM_TUNES - 1
+
+	other_ids = col.find_cards(
+		searchStr,
+		order=f'RANDOM() limit {searchLimit}'
+	)
 	print(f'found {other_ids=}')
 	others = (col.getCard(card_id) for card_id in other_ids)
 
@@ -74,7 +95,7 @@ def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -
 
 def format_set_question(cards: Sequence[Card]) -> HTML:
 	return HTML(
-		'\n'.join(card.q() for card in cards) + '<p>Herro!</p>'
+		'\n'.join(card.q() for card in cards)
 	)
 
 def on_card_will_show_qn(q: HTML, card: Card, showType: str) -> HTML:
@@ -96,7 +117,7 @@ def get_set_from_base_card(focus_card: FocusCard) -> Sequence[Card]:
 
 def format_set_answers(cards: Sequence[Card]) -> HTML:
 	return HTML(
-		'\n'.join(card.a() for card in cards) + '<p>Byebye!</p>'
+		'\n'.join(card.a() for card in cards)
 	)
 
 def update_answer_buttons(focus_card: Card) -> None:
