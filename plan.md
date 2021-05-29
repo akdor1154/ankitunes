@@ -17,6 +17,7 @@ Phase 1 -
 show sets
 
 - [x] exclude focus tune from sets
+- [x] button to "Practice Sets"
 
 
 Phase 2 -

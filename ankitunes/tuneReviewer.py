@@ -15,6 +15,8 @@ import random
 import json
 from typing import *
 
+from .util import mw
+
 HTML = NewType('HTML', str)
 Scheduler = Union[anki.sched.Scheduler, anki.schedv2.Scheduler]
 
@@ -25,10 +27,8 @@ class FocusCardProtocol(Protocol):
 class FocusCard(Card, FocusCardProtocol):
 	pass
 
-def mw() -> aqt.AnkiQt:
-	if not aqt.mw:
-		raise Exception('Main Window doesn\'t exist!')
-	return aqt.mw
+## Magic Global State
+is_reviewing_tunes = False
 
 
 ## Webview Hooks
@@ -51,8 +51,8 @@ def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -
 
 	focus_note = focus_card.note()
 	# get extra cards from scheduler
-	tuneTypeField = focus_note['Tune Type']
-	key, tuneType = tuneTypeField.split(' ', 1)
+	tune_type_val = focus_note['Tune Type']
+	key, tune_type = tune_type_val.split(' ', 1)
 
 	# readability
 	def join(a: Union[str, SearchNode], op: anki.collection.SearchJoiner, b: Union[str, SearchNode]) -> SearchNode:
@@ -63,22 +63,22 @@ def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -
 	search = (
 		join(
 			join(
-				f'"Tune Type:* {tuneType}"',
+				f'"Tune Type:* {tune_type}"',
 				'OR',
-				f'"Tune Type:{tuneType}"',
+				f'"Tune Type:{tune_type}"',
 			),
 			'AND',
 			SearchNode(negated=SearchNode(nid=focus_card.nid))
 		)
 	)
-	searchStr = col.build_search_string(search)
-	print(f'searching for {searchStr}')
+	search_str = col.build_search_string(search)
+	print(f'searching for {search_str}')
 
-	searchLimit = SET_NUM_TUNES - 1
+	search_limit = SET_NUM_TUNES - 1
 
 	other_ids = col.find_cards(
-		searchStr,
-		order=f'RANDOM() limit {searchLimit}'
+		search_str,
+		order=f'RANDOM() limit {search_limit}'
 	)
 	print(f'found {other_ids=}')
 	others = (col.getCard(card_id) for card_id in other_ids)
@@ -98,8 +98,10 @@ def format_set_question(cards: Sequence[Card]) -> HTML:
 		'\n'.join(card.q() for card in cards)
 	)
 
-def on_card_will_show_qn(q: HTML, card: Card, showType: str) -> HTML:
-	if showType != 'reviewQuestion':
+def on_card_will_show_qn(q: HTML, card: Card, show_type: str) -> HTML:
+	if not is_reviewing_tunes:
+		return q
+	if show_type != 'reviewQuestion':
 		return q
 
 	cards = turn_card_into_set(cast(FocusCard, card), mw().col)
@@ -133,8 +135,11 @@ def update_answer_buttons(focus_card: Card) -> None:
 	mw().reviewer.bottom.web.adjustHeightToFit()
 
 
-def on_card_will_show_ans(ans: HTML, focus_card: Card, showType: str) -> HTML:
-	if showType != 'reviewAnswer':
+def on_card_will_show_ans(ans: HTML, focus_card: Card, show_type: str) -> HTML:
+	if not is_reviewing_tunes:
+		return ans
+
+	if show_type != 'reviewAnswer':
 		return ans
 
 	cards = get_set_from_base_card(cast(FocusCard, focus_card))
