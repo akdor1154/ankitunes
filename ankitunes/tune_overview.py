@@ -6,7 +6,7 @@ import aqt
 import aqt.gui_hooks
 import aqt.overview
 
-from . import tuneReviewer
+from . import tune_reviewer
 from .util import mw
 
 class TuneOverview:
