@@ -7,13 +7,18 @@ import functools
 
 from anki.models import NoteType, ModelManager
 from anki.notes import Note
+import aqt
+import aqt.gui_hooks
+
+from .col_card_type import TemplateMigrator, TPL_VER_KEY
+from .util import mw
 
 from .result import Result, Ok, Err
 
 # TNT - Tune Note Type
 
 # TODO: allow configuration of this.
-TNT_NAME = 'Tune'
+TNT_NAME = 'AnkiTune'
 
 
 class TNTVersion(IntEnum):
@@ -89,7 +94,7 @@ class TNTMigrator:
 		except ValueError:
 			return Err(VersionErr.ExistsUnknown(version))
 
-	def migrate(self, vr: VersionResult) -> None:
+	def migrate(self, vr: VersionResult) -> NoteType:
 		version, nt = vr
 		for target_version in sorted(TNTVersion):
 			if version >= target_version:
@@ -102,31 +107,63 @@ class TNTMigrator:
 
 			nt = migrate_func(self, cast(NoteType, nt))
 
+		return cast(NoteType, nt)
+
 	@migration
 	def migrate_v0_to_v1(self, nt: Optional[NoteType]) -> NoteType:
 		# for v0, nt is always None...
 		if nt is not None:
 			raise Exception('migration invariant check 2 failed!')
 
-		basic = self.mn.byName('Basic')
-		if basic is None:
-			raise Exception('couldn\'t get Basic card type')
-
-		nt = self.mn.copy(basic)
+		nt = self.mn.new(TNT_NAME)
 
 		nt['name'] = TNT_NAME
 		for field in [
+			self.mn.new_field('Name'),
 			self.mn.new_field('Tune Type'),
 			self.mn.new_field('ABC'),
 			self.mn.new_field('Link')
 		]:
 			self.mn.add_field(nt,  field)
 
+
+		# we need to do this now as well as after the migration - we want our template
+		# to be the only one if we are setting up the card type from scratch.
+		nt['tmpls'] = [
+			TemplateMigrator(self.mn).build_template()
+		]
+
 		nt['other'] = nt.get('other', {})
-		nt['other'][NT_VER] = 1
+		nt['other'][NT_VER_KEY] = 1
 
 		self.mn.save(nt)
 		return nt
+
+
+	def migrate_template(self, nt: NoteType) -> None:
+		'''Updates the template in nt to be our Tune renderer. nt is assumed to be our Tune.'''
+
+		# Search templates for any managed by us.
+		existing_templates = [
+			(i, t) for i, t in enumerate(nt['tmpls'])
+			if t.get('other', {}).get(TPL_VER_KEY) == True
+		]
+
+		if len(existing_templates) > 1:
+			raise Exception('Multiple Ankitunes-managed templates detected. Aborting.')
+
+		our_template = TemplateMigrator(self.mn).build_template()
+
+		# if existing template, update it
+		if len(existing_templates) == 1:
+			i, old_t = existing_templates[0]
+			nt['tmpls'][i] = our_template
+
+		# else append
+		else:
+			self.mn.add_template(nt, our_template)
+
+		self.mn.save(nt)
 
 	def setup_tune_note_type(self) -> None:
 		#if not exist, create
@@ -135,10 +172,20 @@ class TNTMigrator:
 
 		if not isinstance(current_version_res, Ok):
 			#TODO error handling
+			from pprint import pprint
+			pprint(current_version_res)
 			raise Exception('bang')
 
-		self.migrate(current_version_res.value)
+		nt = self.migrate(current_version_res.value)
+
+		self.migrate_template(nt)
 
 for ver in TNTVersion:
 	if _migrations.get(ver) is None:
 		raise Exception(f'missing migration for {ver}')
+
+def migrate() -> None:
+	mn = mw().col.models
+	TNTMigrator(mn).setup_tune_note_type()
+
+aqt.gui_hooks.profile_did_open.append(migrate)

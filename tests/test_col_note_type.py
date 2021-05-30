@@ -28,7 +28,7 @@ def test_get_version_empty(mn: ModelManager) -> None:
 	assert vers == Ok((NT.FakeVersion.NotExist, None))
 
 # Will need to change if becomes configurable
-TNT_NAME = 'Tune'
+TNT_NAME = 'AnkiTune'
 
 @contextlib.contextmanager
 def setupNoteType(mn: ModelManager) -> Generator[NoteType, None, None]:
@@ -89,3 +89,13 @@ def test_migrate_v0_to_v1(mn: ModelManager) -> None:
 	nt = mn.byName(TNT_NAME)
 
 	assert m.get_current_version() == Ok((NT.TNTVersion.V1, nt))
+
+def test_migrate(mn: ModelManager) -> None:
+	m = NT.TNTMigrator(mn)
+
+	m.setup_tune_note_type()
+
+	nt = mn.byName(TNT_NAME)
+	assert m.get_current_version() == Ok((NT.TNTVersion.V1, nt))
+
+	assert len(nt['tmpls']) == 1

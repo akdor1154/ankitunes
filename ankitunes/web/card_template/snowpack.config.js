@@ -16,7 +16,7 @@ module.exports = {
     /* ... */
   },
   buildOptions: {
-    out: 'dist'
+    out: '../dist/card_template/'
   },
   mode: 'production',
   optimize: {

@@ -1,57 +1,58 @@
 import anki
-from anki.models import ModelManager, NoteType
+from anki.models import ModelManager, NoteType, Template as AnkiTemplate
+from .util import mw
+from string import Template as pyTemplate
+from textwrap import dedent
+from typing import *
+import sys
 
 TEMPLATE_NAME = 'Tune'
 TPL_VER_KEY = 'ankitunes_nt_version'
 
-answer = '''
-{{FrontSide}}
+question = '''
+<h1>{{Name}}</h1>
 
-<hr id=answer>
-
-{{Tune}}
-{{Link}}
-
-{{#abc}}
-
-<pre id="abcSource">
-{{abc}}
-</pre>
-
-<div id="renderedAbc"></div>
-
-{{/abc}}
+<h2>{{Tune Type}}</h2>
 '''
+
+def answer(addon_package: str) -> str:
+	return pyTemplate(dedent('''
+		{{FrontSide}}
+
+		<hr id=answer>
+
+		{{Link}}
+
+		{{#ABC}}
+
+		<pre id="abcSource">
+		{{ABC}}
+		</pre>
+
+		<div id="renderedAbc"></div>
+
+		<script defer src="/_addons/${addon_package}/web/dist/card_template/template.js" />
+
+		{{/ABC}}
+	''')).substitute(addon_package=addon_package)
 
 class TemplateMigrator:
 	mn: ModelManager
+
 	def __init__(self, mn: ModelManager) -> None:
 		self.mn = mn
 
-	def build_template(self) -> None:
+	def build_template(self) -> AnkiTemplate:
+		# TODO: fix.
+		# Breaks in unit test because mw() is unavailable
+		if 'pytest' in sys.modules:
+			addon_package = 'BOO'
+		else:
+			addon_package = mw().addonManager.addonFromModule(__name__)
 		t = self.mn.new_template(TEMPLATE_NAME)
-		t['']
-
-	def migrate_template(self, nt: NoteType) -> None:
-		'''Updates the template in nt to be our Tune renderer. nt is assumed to be our Tune.'''
-
-		# Search templates for any managed by us.
-		existing_templates = [
-			(i, t) for i, t in enumerate(nt['tmpls'])
-			if t.get('other', {})[TPL_VER_KEY] == 'ankitunes_nt_version'
-		]
-
-		if len(existing_templates) > 1:
-			raise Exception('Multiple Ankitunes-managed templates detected. Aborting.')
-
-		our_template = self.build_template()
-
-		# if existing template, update it
-		if len(existing_templates) == 1:
-			i, old_t = existing_templates[0]
-			nt['tmpls'][i] = our_template
-
-		# else append
-		self.mn.add_template(nt, our_template)
-
-		self.mn.save(nt)
+		t['qfmt'] = question
+		t['afmt'] = answer(addon_package)
+		t['other'] = {
+			TPL_VER_KEY: True
+		}
+		return t

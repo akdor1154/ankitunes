@@ -39,4 +39,5 @@ def empty_collection() -> Generator[anki.collection.Collection, None, None]:
 		shutil.copy(_getMasterFilePath(), tf.name)
 	col = anki.collection.Collection(tf.name)
 	yield col
+	col.close(downgrade=False)
 	os.unlink(col.path)
