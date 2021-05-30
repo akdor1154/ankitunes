@@ -4,11 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "tsc",
+    "snowpack": "snowpack"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "snowpack": "^3.5.2",
     "typescript": "^4.3.2"
+  },
+  "dependencies": {
+    "abcjs": "^5.12.0"
   }
 }
