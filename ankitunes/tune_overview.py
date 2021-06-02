@@ -59,11 +59,11 @@ class TuneOverview:
 		#  (this handler can modify the cmd that gets processed)
 		# then _linkHandler() call can be removed.
 		if message == 'study_sets':
-			tuneReviewer.is_reviewing_tunes = True
+			tune_reviewer.is_reviewing_tunes = True
 			self.overview._linkHandler('study')
 			return (True, None)
 		elif message == 'study':
-			tuneReviewer.is_reviewing_tunes = False
+			tune_reviewer.is_reviewing_tunes = False
 			self.overview._linkHandler('study')
 			return (True, None)
 

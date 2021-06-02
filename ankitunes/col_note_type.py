@@ -15,6 +15,9 @@ from .util import mw
 
 from .result import Result, Ok, Err
 
+import logging
+logger = logging.getLogger(__name__)
+
 # TNT - Tune Note Type
 
 # TODO: allow configuration of this.
@@ -97,21 +100,27 @@ class TNTMigrator:
 	def migrate(self, vr: VersionResult) -> NoteType:
 		version, nt = vr
 		for target_version in sorted(TNTVersion):
+			logger.debug(f'target version is {target_version}')
+			logger.debug(f'current version is {version}')
 			if version >= target_version:
+				logger.debug('skipping migration')
 				continue
 
 			if not version+1 == target_version:
 				raise Exception('migration invariant check failed!')
 
 			migrate_func = _migrations[target_version]
-
+			logger.info(f'migrating with {migrate_func}')
 			nt = migrate_func(self, cast(NoteType, nt))
+
+			self.mn.save(nt)
 
 		return cast(NoteType, nt)
 
 	@migration
 	def migrate_v0_to_v1(self, nt: Optional[NoteType]) -> NoteType:
 		# for v0, nt is always None...
+
 		if nt is not None:
 			raise Exception('migration invariant check 2 failed!')
 
@@ -132,11 +141,11 @@ class TNTMigrator:
 		nt['tmpls'] = [
 			TemplateMigrator(self.mn).build_template()
 		]
+		nt['tmpls'][0]['ord'] = 0
 
 		nt['other'] = nt.get('other', {})
 		nt['other'][NT_VER_KEY] = 1
 
-		self.mn.save(nt)
 		return nt
 
 
@@ -157,15 +166,18 @@ class TNTMigrator:
 		# if existing template, update it
 		if len(existing_templates) == 1:
 			i, old_t = existing_templates[0]
-			nt['tmpls'][i] = our_template
 
+			nt['tmpls'][i] = our_template
+			nt['tmpls'][i]['ord'] = old_t['ord']
 		# else append
 		else:
 			self.mn.add_template(nt, our_template)
+			nt['tmpls'][0]['ord'] = 0
 
 		self.mn.save(nt)
 
 	def setup_tune_note_type(self) -> None:
+
 		#if not exist, create
 		#if exist, run migrations
 		current_version_res = self.get_current_version()
@@ -177,15 +189,17 @@ class TNTMigrator:
 			raise Exception('bang')
 
 		nt = self.migrate(current_version_res.value)
-
 		self.migrate_template(nt)
+
 
 for ver in TNTVersion:
 	if _migrations.get(ver) is None:
 		raise Exception(f'missing migration for {ver}')
 
+
 def migrate() -> None:
 	mn = mw().col.models
 	TNTMigrator(mn).setup_tune_note_type()
+
 
 aqt.gui_hooks.profile_did_open.append(migrate)

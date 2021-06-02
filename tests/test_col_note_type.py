@@ -84,7 +84,8 @@ def test_get_version_exist_known(mn: ModelManager) -> None:
 def test_migrate_v0_to_v1(mn: ModelManager) -> None:
 	m = NT.TNTMigrator(mn)
 
-	m.migrate_v0_to_v1(None)
+	nt = m.migrate_v0_to_v1(None)
+	mn.save(nt)
 
 	nt = mn.byName(TNT_NAME)
 
