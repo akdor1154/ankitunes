@@ -9,6 +9,7 @@ import anki.notes
 import anki.cards
 from .. import utils
 from ankitunes.col_note_type import TNTMigrator
+from ankitunes.result import Result, Ok
 
 Note_v1 = TypedDict('Note_v1', {
 	'Name': str,
@@ -57,7 +58,7 @@ notes: List[Note_v1] = [
 	}
 ]
 
-def test_migration_data_integrity(empty_collection: ACollection):
+def test_migration_data_integrity(empty_collection: ACollection) -> None:
 	col = empty_collection
 	deck_id = col.decks.id('Test Deck', create=True)
 	assert deck_id is not None
@@ -65,7 +66,7 @@ def test_migration_data_integrity(empty_collection: ACollection):
 	migrator = TNTMigrator(mn)
 
 	# migrate to v1
-	v1nt = migrator.migrate_v0_to_v1(None)
+	v1nt = migrator.migrate_v0_to_v1(None).unwrap()
 	migrator.migrate_template(v1nt)
 	mn.save(v1nt)
 

@@ -8,6 +8,9 @@ class Ok(Generic[T]):
 	def __init__(self, val: T) -> None:
 		self.value = val
 
+	def unwrap(self) -> T:
+		return self.value
+
 	def __eq__(self, other: Any) -> bool:
 		if not isinstance(other, Ok):
 			return super().__eq__(other)
@@ -21,6 +24,9 @@ class Err(Generic[E]):
 	err_value: E
 	def __init__(self, val: E) -> None:
 		self.err_value = val
+
+	def unwrap(self) -> T:
+		raise Exception(f'Tried to unwrap an error with value {repr(self.err_value)}!')
 
 	def __eq__(self, other: Any) -> bool:
 		if not isinstance(other, Err):

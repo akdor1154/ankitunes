@@ -46,7 +46,18 @@ class VersionErr:
 
 _VersionErr = Union[VersionErr.ExistsUnmanaged, VersionErr.ExistsUnknown]
 
+NT_KEY = 'ankitunes_nt'
 NT_VER_KEY = 'ankitunes_nt_version'
+
+
+class MigrationErr:
+	class NameTaken(NamedTuple):
+		name: str
+		@property
+		def msg(self) -> str:
+			return f'Note type with name {self.name} already exists but is unmanaged by AnkiTunes! Please rename it..'
+
+_MigrationErr = Union[MigrationErr.NameTaken]
 
 # Migrations have probably had the shit overengineered out of them..
 # but this is one thing I will try to get right on iteration 0 and not
@@ -56,7 +67,7 @@ NT_VER_KEY = 'ankitunes_nt_version'
 # migration_v0_to_v1(self, nt) -> nt
 # They are registered with the @migration decorator,
 # checked for sanity, and stored in _migrations.
-Migration = Callable[['TNTMigrator', NoteType], NoteType]
+Migration = Callable[['TNTMigrator', NoteType], Result[NoteType, _MigrationErr]]
 
 _migrations: Dict[TNTVersion, Migration] = {}
 
@@ -79,14 +90,20 @@ class TNTMigrator:
 		self.mn = mn
 
 	def get_current_version(self) -> Result[VersionResult, _VersionErr]:
-		existing_nt = self.mn.byName(TNT_NAME)
-		if existing_nt is None:
+		existing_nts = [
+			nt
+			for nt in self.mn.all()
+			if nt.get('other', {}).get(NT_KEY) == True
+		]
+		if len(existing_nts) > 1:
+			raise NotImplementedError('Multiple AnkiTunes note types detected. We can currently only deal with one.')
+		if len(existing_nts) == 0:
 			return Ok((FakeVersion.NotExist, None))
-		if "other" not in existing_nt:
-			return Err(VersionErr.ExistsUnmanaged())
-		if NT_VER_KEY not in existing_nt["other"]:
-			return Err(VersionErr.ExistsUnmanaged())
 
+		existing_nt = existing_nts[0]
+
+		if NT_VER_KEY not in existing_nt["other"]:
+			raise Exception(f"Note type {existing_nt.get('name', '[unnamed]')} has no version")
 		version: Any = existing_nt["other"][NT_VER_KEY]
 		if not isinstance(version, int):
 			raise Exception(f"Note type {existing_nt.get('name', '[unnamed]')} has corrupt version {version}")
@@ -97,7 +114,8 @@ class TNTMigrator:
 		except ValueError:
 			return Err(VersionErr.ExistsUnknown(version))
 
-	def migrate(self, vr: VersionResult) -> NoteType:
+
+	def migrate(self, vr: VersionResult) -> Result[NoteType, _MigrationErr]:
 		version, nt = vr
 		for target_version in sorted(TNTVersion):
 			logger.debug(f'target version is {target_version}')
@@ -111,18 +129,25 @@ class TNTMigrator:
 
 			migrate_func = _migrations[target_version]
 			logger.info(f'migrating with {migrate_func}')
-			nt = migrate_func(self, cast(NoteType, nt))
+			migrate_res = migrate_func(self, cast(NoteType, nt))
+			if isinstance(migrate_res, Err):
+				return migrate_res
+			nt = migrate_res.value
 
 			self.mn.save(nt)
 
-		return cast(NoteType, nt)
+		return Ok(cast(NoteType, nt))
 
 	@migration
-	def migrate_v0_to_v1(self, nt: Optional[NoteType]) -> NoteType:
+	def migrate_v0_to_v1(self, nt: Optional[NoteType]) -> Result[NoteType, _MigrationErr]:
 		# for v0, nt is always None...
 
 		if nt is not None:
 			raise Exception('migration invariant check 2 failed!')
+
+		existing_nt = self.mn.byName(TNT_NAME)
+		if existing_nt is not None:
+			return Err(MigrationErr.NameTaken(TNT_NAME))
 
 		nt = self.mn.new(TNT_NAME)
 
@@ -144,9 +169,10 @@ class TNTMigrator:
 		nt['tmpls'][0]['ord'] = 0
 
 		nt['other'] = nt.get('other', {})
+		nt['other'][NT_KEY] = True
 		nt['other'][NT_VER_KEY] = 1
 
-		return nt
+		return Ok(nt)
 
 
 	def migrate_template(self, nt: NoteType) -> None:
@@ -188,7 +214,16 @@ class TNTMigrator:
 			pprint(current_version_res)
 			raise Exception('bang')
 
-		nt = self.migrate(current_version_res.value)
+		migrate_res = self.migrate(current_version_res.value)
+
+		if not isinstance(migrate_res, Ok):
+			# TODO error handling
+			from pprint import pprint
+			pprint(migrate_res)
+			raise Exception(migrate_res.err_value.msg)
+
+		nt = migrate_res.value
+
 		self.migrate_template(nt)
 
 

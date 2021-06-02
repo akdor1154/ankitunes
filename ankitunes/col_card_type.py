@@ -7,7 +7,7 @@ from typing import *
 import sys
 
 TEMPLATE_NAME = 'Tune'
-TPL_VER_KEY = 'ankitunes_nt_version'
+TPL_VER_KEY = 'ankitunes_tpl'
 
 question = '''
 <h1>{{Name}}</h1>
