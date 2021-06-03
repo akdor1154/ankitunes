@@ -41,10 +41,6 @@ def set_up_reviewer_bottom(web_content: aqt.webview.WebContent, context: Any) ->
 	web_content.js.append(f'/_addons/{addon_package}/web/dist/reviewer_bottom/reviewer_bottom.js')
 	return
 
-mw().addonManager.setWebExports(__name__, r"web/dist/.*")
-aqt.gui_hooks.webview_will_set_content.append(set_up_reviewer_bottom)
-
-
 ## Question
 
 def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -> Sequence[Card]:
@@ -109,8 +105,6 @@ def on_card_will_show_qn(q: HTML, card: Card, show_type: str) -> HTML:
 
 	return newQ
 
-aqt.gui_hooks.card_will_show.append(on_card_will_show_qn)
-
 
 ## Answer
 
@@ -147,9 +141,20 @@ def on_card_will_show_ans(ans: HTML, focus_card: Card, show_type: str) -> HTML:
 
 	return newAns
 
-aqt.gui_hooks.card_will_show.append(on_card_will_show_ans)
-
 def on_reviewer_did_show_ans(focus_card: Card) -> None:
 	update_answer_buttons(focus_card)
 
-aqt.gui_hooks.reviewer_did_show_answer.append(on_reviewer_did_show_ans)
+def on_main_window_did_init():
+	mw().addonManager.setWebExports(__name__, r"web/dist/.*")
+
+
+def setup():
+	aqt.gui_hooks.webview_will_set_content.append(set_up_reviewer_bottom)
+
+	aqt.gui_hooks.card_will_show.append(on_card_will_show_qn)
+
+	aqt.gui_hooks.card_will_show.append(on_card_will_show_ans)
+
+	aqt.gui_hooks.reviewer_did_show_answer.append(on_reviewer_did_show_ans)
+
+	aqt.gui_hooks.main_window_did_init.append(on_main_window_did_init)

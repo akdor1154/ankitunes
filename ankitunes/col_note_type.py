@@ -236,5 +236,5 @@ def migrate() -> None:
 	mn = mw().col.models
 	TNTMigrator(mn).setup_tune_note_type()
 
-
-aqt.gui_hooks.profile_did_open.append(migrate)
+def setup():
+	aqt.gui_hooks.profile_did_open.append(migrate)

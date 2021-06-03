@@ -10,20 +10,11 @@ from . import tune_reviewer
 from .util import mw
 
 class TuneOverview:
-	#static
-	instance: Optional['TuneOverview'] = None
-
 	#member
 	overview: aqt.overview.Overview
 
 	def __init__(self, overview: aqt.overview.Overview) -> None:
 		self.overview = overview
-
-	@staticmethod
-	def ensure_exists(overview: aqt.overview.Overview) -> 'TuneOverview':
-		if TuneOverview.instance is None:
-			TuneOverview.instance = TuneOverview(overview)
-		return TuneOverview.instance
 
 	def _linkHandler(self, url: str) -> bool:
 		if url == "study_sets":
@@ -33,6 +24,7 @@ class TuneOverview:
 			return self.overview._linkHandler(url)
 
 	def overview_did_refresh(self) -> None:
+		print('gotsta hook!!!!')
 		reviewSetsButton = mw().button(
 			"study_sets",
 			"Practice Sets",
@@ -41,15 +33,18 @@ class TuneOverview:
 		# if this grows beyond more than 3 lines then turn it into TS and inject into a handler
 		# with the webview_set_content hook
 		self.overview.web.eval(f'''
-			const studyButton = document.getElementById('study');
-			const parent = studyButton.parentNode;
-			parent.innerHTML += {json.dumps(reviewSetsButton)};
+			window.setTimeout(function() {{
+				console.log('hihihi')
+				const studyButton = document.getElementById('study');
+				const parent = studyButton.parentNode;
+				parent.innerHTML += {json.dumps(reviewSetsButton)};
+			}}, 10)
 		''')
 		return
 
 	@staticmethod
 	def static_overview_did_refresh(overview: aqt.overview.Overview) -> None:
-		return TuneOverview.ensure_exists(overview).overview_did_refresh()
+		return TuneOverview(overview).overview_did_refresh()
 
 	def webview_did_receive_js_message(self, handled: Tuple[bool, Any], message: str) -> Tuple[bool, Any]:
 		# Private API call to _linkHandler is currently required.
@@ -74,10 +69,10 @@ class TuneOverview:
 		if not isinstance(context, aqt.overview.Overview):
 			return handled
 
-		return TuneOverview.ensure_exists(context).webview_did_receive_js_message(handled, message)
+		return TuneOverview(context).webview_did_receive_js_message(handled, message)
 
+def setup():
+	aqt.gui_hooks.overview_did_refresh.append(TuneOverview.static_overview_did_refresh)
 
-aqt.gui_hooks.overview_did_refresh.append(TuneOverview.static_overview_did_refresh)
-
-aqt.gui_hooks.webview_did_receive_js_message.append(TuneOverview.static_webview_did_receive_js_message)
+	aqt.gui_hooks.webview_did_receive_js_message.append(TuneOverview.static_webview_did_receive_js_message)
 
