@@ -7,7 +7,6 @@ from anki.decks import Deck
 from anki.models import Field, ModelManager
 import anki.notes
 import anki.cards
-from .. import utils
 from ankitunes.col_note_type import TNTMigrator
 from ankitunes.result import Result, Ok
 

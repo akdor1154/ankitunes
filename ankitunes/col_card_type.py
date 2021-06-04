@@ -1,4 +1,5 @@
 import anki
+from aqt.addons import AddonManager
 from anki.models import ModelManager, NoteType, Template as AnkiTemplate
 from .util import mw
 from string import Template as pyTemplate
@@ -43,12 +44,9 @@ class TemplateMigrator:
 		self.mn = mn
 
 	def build_template(self) -> AnkiTemplate:
-		# TODO: fix.
-		# Breaks in unit test because mw() is unavailable
-		if 'pytest' in sys.modules:
-			addon_package = 'BOO'
-		else:
-			addon_package = mw().addonManager.addonFromModule(__name__)
+
+		addon_package = AddonManager.addonFromModule(None, __name__)
+
 		t = self.mn.new_template(TEMPLATE_NAME)
 		t['qfmt'] = question
 		t['afmt'] = answer(addon_package)

@@ -1,6 +1,6 @@
-from profiles.working.addons21.ankitunes.col_note_type import TNTVersion
+from profiles.working.addons21.ankitunes.col_note_type import TNTMigrator, TNTVersion
 from typing import *
-from tests.utils import empty_collection
+from tests.conftest import empty_collection
 
 import anki
 import anki.models
@@ -10,8 +10,6 @@ from anki.models import NoteType, ModelManager
 from anki.collection import Collection as AnkiCollection
 
 import pytest
-
-from . import utils
 
 import contextlib
 
@@ -117,3 +115,17 @@ def test_migrate(mn: ModelManager) -> None:
 
 	assert nt is not None
 	assert len(nt['tmpls']) == 1
+
+def test_is_ankitunes_version(mn: ModelManager) -> None:
+
+	nt = mn.new('is ankitunes')
+	nt['other'] = {
+		'ankitunes_nt': True,
+		'ankitunes_nt_version': 1
+	}
+
+	assert NT.is_ankitunes_nt(nt) is True
+
+	nt2 = mn.new("isn't ankitunes")
+
+	assert NT.is_ankitunes_nt(nt2) is False

@@ -89,10 +89,11 @@ class TNTMigrator:
 	def __init__(self, mn: ModelManager):
 		self.mn = mn
 
-	def get_current_version(self) -> Result[VersionResult, _VersionErr]:
+	@staticmethod
+	def _get_version(note_types: Sequence[NoteType]) -> Result[VersionResult, _VersionErr]:
 		existing_nts = [
 			nt
-			for nt in self.mn.all()
+			for nt in note_types
 			if nt.get('other', {}).get(NT_KEY) == True
 		]
 		if len(existing_nts) > 1:
@@ -114,6 +115,8 @@ class TNTMigrator:
 		except ValueError:
 			return Err(VersionErr.ExistsUnknown(version))
 
+	def get_current_version(self) -> Result[VersionResult, _VersionErr]:
+		return TNTMigrator._get_version(self.mn.all())
 
 	def migrate(self, vr: VersionResult) -> Result[NoteType, _MigrationErr]:
 		version, nt = vr
@@ -235,6 +238,14 @@ for ver in TNTVersion:
 def migrate() -> None:
 	mn = mw().col.models
 	TNTMigrator(mn).setup_tune_note_type()
+
+def is_ankitunes_nt(note_type: NoteType) -> bool:
+	ver_result = TNTMigrator._get_version([note_type])
+	if isinstance(ver_result, Ok):
+		ver, nt = ver_result.value
+		return (ver is max(v for v in TNTVersion))
+	else:
+		return False
 
 def setup():
 	aqt.gui_hooks.profile_did_open.append(migrate)

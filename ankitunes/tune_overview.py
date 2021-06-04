@@ -5,6 +5,7 @@ import aqt
 
 import aqt.gui_hooks
 import aqt.overview
+import aqt.webview
 
 from . import tune_reviewer
 from .util import mw
@@ -23,8 +24,7 @@ class TuneOverview:
 		else:
 			return self.overview._linkHandler(url)
 
-	def overview_did_refresh(self) -> None:
-		print('gotsta hook!!!!')
+	def overview_did_set_content(self, web_content: aqt.webview.WebContent) -> aqt.webview.WebContent:
 		reviewSetsButton = mw().button(
 			"study_sets",
 			"Practice Sets",
@@ -32,19 +32,20 @@ class TuneOverview:
 		)
 		# if this grows beyond more than 3 lines then turn it into TS and inject into a handler
 		# with the webview_set_content hook
-		self.overview.web.eval(f'''
-			window.setTimeout(function() {{
-				console.log('hihihi')
+		web_content.body += f'''
+			<script type="text/javascript">
 				const studyButton = document.getElementById('study');
 				const parent = studyButton.parentNode;
 				parent.innerHTML += {json.dumps(reviewSetsButton)};
-			}}, 10)
-		''')
-		return
+			</script>
+		'''
+		return web_content
 
 	@staticmethod
-	def static_overview_did_refresh(overview: aqt.overview.Overview) -> None:
-		return TuneOverview(overview).overview_did_refresh()
+	def static_overview_did_set_content(content: aqt.webview.WebContent, context: Any) -> None:
+		if not isinstance(context, aqt.overview.Overview):
+			return
+		return TuneOverview(context).overview_did_set_content(content)
 
 	def webview_did_receive_js_message(self, handled: Tuple[bool, Any], message: str) -> Tuple[bool, Any]:
 		# Private API call to _linkHandler is currently required.
@@ -72,7 +73,7 @@ class TuneOverview:
 		return TuneOverview(context).webview_did_receive_js_message(handled, message)
 
 def setup():
-	aqt.gui_hooks.overview_did_refresh.append(TuneOverview.static_overview_did_refresh)
+	aqt.gui_hooks.webview_will_set_content.append(TuneOverview.static_overview_did_set_content)
 
 	aqt.gui_hooks.webview_did_receive_js_message.append(TuneOverview.static_webview_did_receive_js_message)
 
