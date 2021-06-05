@@ -25,7 +25,7 @@ jobs:
           name: Install XVFB
           command: |
             # apt-get update
-            apt-get install xvfb
+            sudo apt-get install xvfb
 
       - run:
           name: Install poetry
