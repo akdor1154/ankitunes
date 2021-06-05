@@ -20,7 +20,7 @@ typescript:
 build: dist/ankitunes.ankiaddon
 
 dist/ankitunes.ankiaddon: typescript
-	rm -r dist/*
+	rm -rf dist/*
 	poetry build
 	mkdir dist/wheel
 	cd dist/wheel; unzip ../ankitunes-*.whl
