@@ -94,11 +94,11 @@ def format_set_question(cards: Sequence[Card]) -> HTML:
 		'\n'.join(card.q() for card in cards)
 	)
 
-def on_card_will_show_qn(q: HTML, card: Card, show_type: str) -> HTML:
+def on_card_will_show_qn(q: str, card: Card, show_type: str) -> HTML:
 	if not is_reviewing_tunes:
-		return q
+		return HTML(q)
 	if show_type != 'reviewQuestion':
-		return q
+		return HTML(q)
 
 	cards = turn_card_into_set(cast(FocusCard, card), mw().col)
 	newQ = format_set_question(cards)
@@ -139,12 +139,12 @@ def update_answer_buttons(focus_card: Card) -> None:
 	mw().reviewer.bottom.web.adjustHeightToFit()
 
 
-def on_card_will_show_ans(ans: HTML, focus_card: Card, show_type: str) -> HTML:
+def on_card_will_show_ans(ans: str, focus_card: Card, show_type: str) -> HTML:
 	if not is_reviewing_tunes:
-		return ans
+		return HTML(ans)
 
 	if show_type != 'reviewAnswer':
-		return ans
+		return HTML(ans)
 
 	cards = get_set_from_base_card(cast(FocusCard, focus_card))
 	newAns = format_set_answers(cards)
@@ -154,11 +154,11 @@ def on_card_will_show_ans(ans: HTML, focus_card: Card, show_type: str) -> HTML:
 def on_reviewer_did_show_ans(focus_card: Card) -> None:
 	update_answer_buttons(focus_card)
 
-def on_main_window_did_init():
+def on_main_window_did_init() -> None:
 	mw().addonManager.setWebExports(__name__, r"web/dist/.*")
 
 
-def setup():
+def setup() -> None:
 	aqt.gui_hooks.webview_will_set_content.append(set_up_reviewer_bottom)
 
 	aqt.gui_hooks.card_will_show.append(on_card_will_show_qn)

@@ -46,12 +46,12 @@ class TemplateMigrator:
 
 	def build_template(self) -> AnkiTemplate:
 
-		addon_package = AddonManager.addonFromModule(None, __name__)
+		addon_package = AddonManager.addonFromModule(cast(AddonManager, None), __name__)
 
 		t = self.mn.new_template(TEMPLATE_NAME)
 		t['qfmt'] = question
 		t['afmt'] = answer(addon_package)
 		t['other'] = {
 			TPL_VER_KEY: True
-		}
+		} # type: ignore
 		return t
