@@ -71,7 +71,7 @@ jobs:
 
       - run:
           name: pytest
-          command: env QT_DEBUG_PLUGINS=1 poetry run pytest tests
+          command: env QT_DEBUG_PLUGINS=1 poetry run pytest -s tests
 
   register:
     executor:
