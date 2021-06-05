@@ -22,26 +22,6 @@ jobs:
       name: python_docker
       python_docker_tag: << parameters.python_docker_tag >>
     steps:
-      - run:
-          name: Install XVFB
-          command: |
-            sudo apt-get update
-            sudo apt-get install \
-              xvfb \
-              libxcursor1 \
-              libxkbcommon0 \
-              libxkbcommon-x11-0 \
-              libasound2 \
-              x11-utils \
-              nodejs npm \
-              python3-pyqt5 python3-pip
-
-      - run:
-          name: Install poetry
-          command: |
-            python -m pip install --upgrade pip
-            python -m pip install --upgrade poetry
-            poetry config virtualenvs.in-project true
 
       - checkout
 
