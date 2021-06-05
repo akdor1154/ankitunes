@@ -7,7 +7,8 @@ executors:
       python_docker_tag:
         type: string
     docker:
-      - image: cimg/python:<< parameters.python_docker_tag >>
+      #- image: cimg/python:<< parameters.python_docker_tag >>
+      - image: akdor1154/cimg-ankitunes
   publisher:
     docker:
       - image: cimg/python:3.9
@@ -102,7 +103,8 @@ workflows:
       - test:
           matrix:
             parameters:
-              python_docker_tag: ["3.8", "3.9"]
+              #python_docker_tag: ["3.8", "3.9"]
+              python_docker_tag: ["3.8"]
           filters:
             tags:
               only: /^v\d+\.\d+\.\d+.*$/
