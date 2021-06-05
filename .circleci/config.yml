@@ -32,6 +32,7 @@ jobs:
               libxkbcommon-x11-0 \
               libasound2 \
               x11-utils \
+              nodejs npm \
               python3-pyqt5 python3-pip
 
       - run:
@@ -55,7 +56,7 @@ jobs:
 
       - run:
           name: Install test dependencies
-          command: poetry install
+          command: make deps
 
       - save_cache:
           key: >
@@ -70,6 +71,10 @@ jobs:
       - run:
           name: mypy
           command: poetry run mypy ankitunes
+
+      - run:
+          name: Make
+          command: make
 
       - run:
           name: pytest
