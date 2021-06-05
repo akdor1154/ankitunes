@@ -1,5 +1,5 @@
 .PHONY: all
-all: typescript
+all: build
 
 .PHONY: webdeps
 webdeps:
@@ -12,6 +12,16 @@ pythondeps:
 .PHONY: deps
 deps: webdeps pythondeps
 
-
+.PHONY: typescript
 typescript:
 	$(MAKE) -C ankitunes/web
+
+.PHONY: build
+build: dist/ankitunes.ankiaddon
+
+dist/ankitunes.ankiaddon: typescript
+	rm -r dist/*
+	poetry build
+	mkdir dist/wheel
+	cd dist/wheel; unzip ../ankitunes-*.whl
+	cd dist/wheel/ankitunes; zip -r ../../ankitunes.ankiaddon *

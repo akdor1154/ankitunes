@@ -57,7 +57,18 @@ def temporary_dir() -> Generator[str, None, None]:
 		yield tempdir
 
 
-def _install_ankitunes(profile_dir: str) -> None:
+
+@pytest.fixture
+def ankiaddon_cmd(request):
+	return request.config.getoption('--ankiaddon')
+
+def _install_ankitunes_bundle(profile_dir: str, addon_bundle: str) -> None:
+	addons_dir = os.path.join(profile_dir, 'addons21/')
+	os.makedirs(addons_dir, exist_ok=True)
+
+	shutil.copy(src=addon_bundle, dst=addons_dir)
+
+def _install_ankitunes_direct(profile_dir: str):
 	import importlib
 	ankitunesSpec = importlib.util.find_spec('ankitunes')
 
@@ -72,6 +83,21 @@ def _install_ankitunes(profile_dir: str) -> None:
 	assert not os.path.exists(ankitunes_addon_dir)
 
 	os.symlink(src=ankitunes_dir, dst=ankitunes_addon_dir)
+
+def _install_ankitunes(profile_dir: str, addon_bundle: Optional[str]) -> None:
+	d = os.path.dirname(__file__)
+	while not os.path.exists(os.path.join(d, 'pyproject.toml')):
+		oldD = d
+		d = os.path.dirname(d)
+		if d == oldD:
+			raise Exception('couldn\'t find project root')
+
+	os.chdir(d)
+
+	if addon_bundle is not None:
+		return _install_ankitunes_bundle(profile_dir, addon_bundle)
+	else:
+		return _install_ankitunes_direct(profile_dir)
 
 from typing import NamedTuple
 
@@ -125,7 +151,7 @@ def screenshot():
 
 
 @pytest.fixture
-def anki_running(qtbot: QtBot, install_ankitunes: bool = True) -> Generator[aqt.AnkiApp, None, None]:
+def anki_running(qtbot: QtBot, ankiaddon_cmd, install_ankitunes: bool = True) -> Generator[aqt.AnkiApp, None, None]:
 
 	clean_hooks()
 
@@ -145,7 +171,7 @@ def anki_running(qtbot: QtBot, install_ankitunes: bool = True) -> Generator[aqt.
 	with with_wm():
 		with temporary_dir() as dir_name:
 			if install_ankitunes:
-				_install_ankitunes(dir_name)
+				_install_ankitunes(dir_name, ankiaddon_cmd)
 			with temporary_user(dir_name) as user_name:
 				argv=["anki", "-p", user_name, "-b", dir_name]
 				print(f'running anki with argv={argv}')

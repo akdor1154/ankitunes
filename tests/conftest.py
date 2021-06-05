@@ -47,3 +47,8 @@ def pytest_addoption(parser):
 		'--fiddle',
 		action='store_true'
 	)
+
+	parser.addoption(
+		'--ankiaddon',
+		action='store'
+	)

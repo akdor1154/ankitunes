@@ -59,11 +59,15 @@ jobs:
 
       - run:
           name: unit tests
-          command: poetry run pytest -sv tests/headless
+          command: poetry run pytest -sv tests/headless --ankiaddon dist/ankitunes.ankiaddon
 
       - run:
           name: ui tests
-          command: xvfb-run poetry run pytest -sv tests/ui
+          command: xvfb-run poetry run pytest -sv tests/ui --ankiaddon dist/ankitunes.ankiaddon
+
+      - store_artifacts:
+          path: dist/ankitunes.ankiaddon
+          destination: dist/ankitunes.ankiaddon
 
   register:
     executor:
