@@ -30,7 +30,8 @@ jobs:
               libxcursor1 \
               libxkbcommon0 \
               libxkbcommon-x11-0 \
-              libasound2
+              libasound2 \
+              x11-utils
 
       - run:
           name: Install poetry
