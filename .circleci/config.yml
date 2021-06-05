@@ -31,7 +31,8 @@ jobs:
               libxkbcommon0 \
               libxkbcommon-x11-0 \
               libasound2 \
-              x11-utils
+              x11-utils \
+		          python3-pyqt5 python3-pip
 
       - run:
           name: Install poetry
