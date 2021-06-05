@@ -108,12 +108,22 @@ def on_card_will_show_qn(q: HTML, card: Card, show_type: str) -> HTML:
 
 ## Answer
 
+alpha = 'abcdefghijklmnopqrstuvwxyz'
+def random_str(len: int=8) -> str:
+	import random
+	return ''.join(random.choices(alpha, k=len))
+
 def get_set_from_base_card(focus_card: FocusCard) -> Sequence[Card]:
 	return focus_card._ankitunes_set
 
 def format_set_answers(cards: Sequence[Card]) -> HTML:
+	answerHtml = (card.answer() for card in cards)
+	replacedAnswerHtml = (
+		html.replace('__ABC_ID__', random_str())
+		for html in answerHtml
+	)
 	return HTML(
-		'\n'.join(card.a() for card in cards)
+		'\n'.join(replacedAnswerHtml)
 	)
 
 def update_answer_buttons(focus_card: Card) -> None:

@@ -1,6 +1,7 @@
 # https://github.com/krassowski/anki_testing/blob/master/anki_testing.py
 
 # coding: utf-8
+from posix import environ
 import shutil
 import tempfile
 from contextlib import contextmanager
@@ -12,11 +13,11 @@ import os.path
 import sys
 from warnings import warn
 
-import aqt
-from aqt import _run
-from aqt import AnkiApp
-from aqt.profiles import ProfileManager
+import pytest
+import pytest_xvfb
 
+import aqt
+from aqt.profiles import ProfileManager
 
 @contextmanager
 def temporary_user(dir_name, name="__Temporary Test User__", lang="en_US") -> Generator[str, None, None]:
@@ -57,8 +58,11 @@ def temporary_dir() -> Generator[str, None, None]:
 
 
 def _install_ankitunes(profile_dir: str) -> None:
+	import importlib
+	ankitunesSpec = importlib.util.find_spec('ankitunes')
 
-	ankitunes_dir = os.path.join(os.getcwd(), 'ankitunes')
+	ankitunes_dir = os.path.dirname(ankitunesSpec.origin)
+
 	assert os.path.exists(ankitunes_dir)
 
 	addons_dir = os.path.join(profile_dir, 'addons21')
@@ -69,11 +73,50 @@ def _install_ankitunes(profile_dir: str) -> None:
 
 	os.symlink(src=ankitunes_dir, dst=ankitunes_addon_dir)
 
-@contextmanager
-def anki_running(install_ankitunes: bool = True) -> Generator[AnkiApp, None, None]:
+from typing import NamedTuple
+
+@pytest.fixture(scope='session')
+def fix_qt(*args, **kwargs) -> None:
+	if os.environ.get('XDG_SESSION_TYPE') == 'wayland':
+		print('overridding wayland session to run tests under xvfb')
+		os.environ['QT_QPA_PLATFORM'] = 'xcb'
+	return
+
+@pytest.fixture(scope='session')
+def qapp(fix_qt, qapp):
+	yield qapp
+
+def clean_hooks() -> None:
+	if 'anki.hooks' in sys.modules:
+		import anki.hooks
+		for name, maybeHook in vars(anki.hooks).items():
+			if hasattr(maybeHook, '_hooks'):
+				maybeHook._hooks = []
+	if 'aqt.gui_hooks' in sys.modules:
+		import aqt.gui_hooks
+		for name, maybeHook in vars(aqt.gui_hooks).items():
+			if hasattr(maybeHook, '_hooks'):
+				maybeHook._hooks = []
+
+	# delete ankitunes module - we need to re-import it to
+	# reload all its hooks if necessary.
+	if 'ankitunes' in sys.modules:
+		del sys.modules['ankitunes']
+
+@pytest.fixture
+def anki_running(xvfb, install_ankitunes: bool = True) -> Generator[aqt.AnkiApp, None, None]:
+
+	if not pytest_xvfb.xvfb_available():
+		raise Exception("Tests need Xvfb to run.")
+
+	clean_hooks()
+
+	import aqt
+	from aqt import _run
+	from aqt import AnkiApp
 
 	# don't use the second instance mechanism, start a new instance every time
-	def mock_secondInstance(self: AnkiApp):
+	def mock_secondInstance(self: AnkiApp) -> bool:
 		return False
 
 	AnkiApp.secondInstance = mock_secondInstance
@@ -101,3 +144,20 @@ def anki_running(install_ankitunes: bool = True) -> Generator[AnkiApp, None, Non
 	import locale
 	locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())
 
+import argparse
+
+def pytest_addoption(parser):
+	parser.addoption(
+		'--fiddle',
+		action='store_true'
+	)
+
+def pytest_runtest_setup(item):
+	fiddle_marks = list(item.iter_markers(name='fiddle'))
+	is_fiddle = (len(fiddle_marks) > 0)
+	if item.config.getoption('--fiddle'):
+		if not is_fiddle:
+			pytest.skip('Fiddles only')
+	else:
+		if is_fiddle:
+			pytest.skip('Disabling fiddles')

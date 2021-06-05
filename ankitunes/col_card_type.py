@@ -10,6 +10,7 @@ import sys
 TEMPLATE_NAME = 'Tune'
 TPL_VER_KEY = 'ankitunes_tpl'
 
+
 question = '''
 <h1>{{Name}}</h1>
 
@@ -26,13 +27,13 @@ def answer(addon_package: str) -> str:
 
 		{{#ABC}}
 
-		<pre id="abcSource">
+		<pre id="__ABC_ID__" class="abcSource">
 		{{ABC}}
 		</pre>
 
-		<div id="renderedAbc"></div>
+		<div class="renderedAbc __ABC_ID__"></div>
 
-		<script defer src="/_addons/${addon_package}/web/dist/card_template/template.js" />
+		<script defer src="/_addons/${addon_package}/web/dist/card_template/template.js"></script>
 
 		{{/ABC}}
 	''')).substitute(addon_package=addon_package)
