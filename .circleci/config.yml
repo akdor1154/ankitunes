@@ -8,7 +8,7 @@ executors:
         type: string
     docker:
       #- image: cimg/python:<< parameters.python_docker_tag >>
-      - image: akdor1154/cimg-ankitunes
+      - image: akdor1154/cimg-ankitunes:<< parameters.python_docker_tag >>
   publisher:
     docker:
       - image: cimg/python:3.9
@@ -59,11 +59,15 @@ jobs:
 
       - run:
           name: unit tests
-          command: poetry run pytest -sv tests/headless
+          command: poetry run pytest -sv tests/headless --ankiaddon dist/ankitunes.ankiaddon
 
       - run:
           name: ui tests
-          command: xvfb-run poetry run pytest -sv tests/ui
+          command: xvfb-run poetry run pytest -sv tests/ui --ankiaddon dist/ankitunes.ankiaddon
+
+      - store_artifacts:
+          path: dist/ankitunes.ankiaddon
+          destination: dist/ankitunes.ankiaddon
 
   register:
     executor:

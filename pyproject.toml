@@ -4,6 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["Jarrad Whitaker <akdor1154@gmail.com>"]
 
+exclude = ["ankitunes/web/**/*"]
+include = ["ankitunes/web/dist/**/*"]
+
 [tool.poetry.dependencies]
 python = "^3.8"
 
