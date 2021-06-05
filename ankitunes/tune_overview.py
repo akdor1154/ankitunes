@@ -24,7 +24,7 @@ class TuneOverview:
 		else:
 			return self.overview._linkHandler(url)
 
-	def overview_did_set_content(self, web_content: aqt.webview.WebContent) -> aqt.webview.WebContent:
+	def overview_did_set_content(self, web_content: aqt.webview.WebContent) -> None:
 		reviewSetsButton = mw().button(
 			"study_sets",
 			"Practice Sets",
@@ -39,7 +39,7 @@ class TuneOverview:
 				parent.innerHTML += {json.dumps(reviewSetsButton)};
 			</script>
 		'''
-		return web_content
+
 
 	@staticmethod
 	def static_overview_did_set_content(content: aqt.webview.WebContent, context: Any) -> None:
@@ -72,7 +72,7 @@ class TuneOverview:
 
 		return TuneOverview(context).webview_did_receive_js_message(handled, message)
 
-def setup():
+def setup() -> None:
 	aqt.gui_hooks.webview_will_set_content.append(TuneOverview.static_overview_did_set_content)
 
 	aqt.gui_hooks.webview_did_receive_js_message.append(TuneOverview.static_webview_did_receive_js_message)

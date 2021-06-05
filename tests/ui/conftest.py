@@ -14,7 +14,7 @@ import sys
 from warnings import warn
 
 import pytest
-import pytest_xvfb
+from  pytestqt.qtbot import QtBot
 
 import aqt
 from aqt.profiles import ProfileManager
@@ -103,11 +103,29 @@ def clean_hooks() -> None:
 	if 'ankitunes' in sys.modules:
 		del sys.modules['ankitunes']
 
-@pytest.fixture
-def anki_running(xvfb, install_ankitunes: bool = True) -> Generator[aqt.AnkiApp, None, None]:
+@contextmanager
+def with_wm():
+	import subprocess
+	import signal
+	wm = subprocess.Popen(['openbox'], encoding='utf-8')
+	yield
+	wm.send_signal(signal.SIGTERM)
+	wm.wait()
+	if wm.returncode != 0:
+		raise subprocess.CalledProcessError(wm.returncode, wm.args)
 
-	if not pytest_xvfb.xvfb_available():
-		raise Exception("Tests need Xvfb to run.")
+def screenshot():
+	import subprocess
+
+	subprocess.run(
+		'scrot',
+		shell=True,
+		check=True
+	)
+
+
+@pytest.fixture
+def anki_running(qtbot: QtBot, install_ankitunes: bool = True) -> Generator[aqt.AnkiApp, None, None]:
 
 	clean_hooks()
 
@@ -121,20 +139,26 @@ def anki_running(xvfb, install_ankitunes: bool = True) -> Generator[aqt.AnkiApp,
 
 	AnkiApp.secondInstance = mock_secondInstance
 
+	import os
+
 	# we need a new user for the test
-	with temporary_dir() as dir_name:
-		if install_ankitunes:
-			_install_ankitunes(dir_name)
-		with temporary_user(dir_name) as user_name:
-			argv=["anki", "-p", user_name, "-b", dir_name]
-			print(f'running anki with argv={argv}')
-			app = _run(argv=argv, exec=False)
-			assert app is not None
-			try:
-				yield app
-			finally:
-				# clean up what was spoiled
-				aqt.mw.cleanupAndExit()
+	with with_wm():
+		with temporary_dir() as dir_name:
+			if install_ankitunes:
+				_install_ankitunes(dir_name)
+			with temporary_user(dir_name) as user_name:
+				argv=["anki", "-p", user_name, "-b", dir_name]
+				print(f'running anki with argv={argv}')
+				app = _run(argv=argv, exec=False)
+				assert app is not None
+				try:
+					qtbot.addWidget(aqt.mw)
+					yield app
+					screenshot()
+				finally:
+					# clean up what was spoiled
+					app.closeAllWindows()
+
 
 	# remove hooks added during app initialization
 	from anki import hooks
@@ -145,12 +169,6 @@ def anki_running(xvfb, install_ankitunes: bool = True) -> Generator[aqt.AnkiApp,
 	locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())
 
 import argparse
-
-def pytest_addoption(parser):
-	parser.addoption(
-		'--fiddle',
-		action='store_true'
-	)
 
 def pytest_runtest_setup(item):
 	fiddle_marks = list(item.iter_markers(name='fiddle'))

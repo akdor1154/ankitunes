@@ -247,5 +247,5 @@ def is_ankitunes_nt(note_type: NoteType) -> bool:
 	else:
 		return False
 
-def setup():
+def setup() -> None:
 	aqt.gui_hooks.profile_did_open.append(migrate)
