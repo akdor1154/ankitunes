@@ -58,8 +58,12 @@ jobs:
           command: make
 
       - run:
-          name: pytest
-          command: env QT_DEBUG_PLUGINS=1 poetry run pytest -sv tests
+          name: unit tests
+          command: poetry run pytest -sv tests/headless
+
+      - run:
+          name: ui tests
+          command: xvfb-run poetry run pytest -sv tests/ui
 
   register:
     executor:

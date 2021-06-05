@@ -22,7 +22,6 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 	import ankitunes
 	import ankitunes.col_note_type
 
-	qtbot.add_widget(aqt.mw)
 	mw.show()
 
 	with wait_hook(qtbot, aqt.gui_hooks.main_window_did_init):

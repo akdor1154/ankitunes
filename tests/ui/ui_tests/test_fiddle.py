@@ -10,7 +10,7 @@ from anki.notes import Note
 from .. import wait_hook
 
 @pytest.mark.fiddle('Interactive debugging only')
-def test_interactive(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
+def test_interactive(qtbot: QtBot, anki_running: aqt.AnkiApp) -> None:
 
 	mw = aqt.mw
 	assert mw is not None
