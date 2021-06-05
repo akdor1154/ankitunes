@@ -92,7 +92,7 @@ workflows:
           matrix:
             parameters:
               #python_docker_tag: ["3.8", "3.9"]
-              python_docker_tag: ["3.8"]
+              python_docker_tag: ["3.8", "3.9"]
           filters:
             tags:
               only: /^v\d+\.\d+\.\d+.*$/
