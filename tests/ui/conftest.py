@@ -146,12 +146,6 @@ def anki_running(xvfb, install_ankitunes: bool = True) -> Generator[aqt.AnkiApp,
 
 import argparse
 
-def pytest_addoption(parser):
-	parser.addoption(
-		'--fiddle',
-		action='store_true'
-	)
-
 def pytest_runtest_setup(item):
 	fiddle_marks = list(item.iter_markers(name='fiddle'))
 	is_fiddle = (len(fiddle_marks) > 0)

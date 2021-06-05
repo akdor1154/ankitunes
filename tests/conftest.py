@@ -40,3 +40,10 @@ def empty_collection() -> Generator[anki.collection.Collection, None, None]:
 	yield col
 	col.close(downgrade=False)
 	os.unlink(col.path)
+
+
+def pytest_addoption(parser):
+	parser.addoption(
+		'--fiddle',
+		action='store_true'
+	)

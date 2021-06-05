@@ -25,7 +25,11 @@ jobs:
           name: Install XVFB
           command: |
             sudo apt-get update
-            sudo apt-get install xvfb
+            sudo apt-get install \
+              xvfb \
+              libxcursor1 \
+              libxkbcommon0 \
+              libasound2
 
       - run:
           name: Install poetry

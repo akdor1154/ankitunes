@@ -1,4 +1,3 @@
-from profiles.working.addons21.ankitunes.col_note_type import TNTMigrator, TNTVersion
 from typing import *
 from tests.conftest import empty_collection
 
@@ -88,9 +87,9 @@ def test_get_version_exist_known(mn: ModelManager) -> None:
 
 @pytest.mark.parametrize(
 	"version",
-	TNTVersion
+	NT.TNTVersion
 )
-def test_migrate_version(mn: ModelManager, version: TNTVersion) -> None:
+def test_migrate_version(mn: ModelManager, version: NT.TNTVersion) -> None:
 	m = NT.TNTMigrator(mn)
 
 	_nt: Optional[NoteType] = None
