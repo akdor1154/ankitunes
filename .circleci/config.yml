@@ -18,6 +18,8 @@ jobs:
     parameters:
       python_docker_tag:
         type: string
+      anki_version:
+        type: string
     executor:
       name: python_docker
       python_docker_tag: << parameters.python_docker_tag >>
@@ -53,6 +55,34 @@ jobs:
           name: mypy
           command: poetry run mypy ankitunes
 
+      - restore_cache:
+          keys:
+            - >
+              v1
+              python_artifacts_with_anki_version
+              << parameters.python_docker_tag >>
+              << parameters.anki_version >>
+              {{ checksum "pyproject.toml" }}
+              {{ checksum "poetry.lock" }}
+
+      - run:
+          name: Force-install Anki version
+          command: |
+            cp pyproject.toml pyproject.toml.old
+            cp poetry.lock poetry.lock.old
+            poetry add -D aqt@<< parameters.anki_version >> anki@<< parameters.anki_version >>
+
+      - save_cache:
+          key: >
+              v1
+              python_artifacts_with_anki_version
+              << parameters.python_docker_tag >>
+              << parameters.anki_version >>
+              {{ checksum "pyproject.toml.old" }}
+              {{ checksum "poetry.lock.old" }}
+          paths:
+            - .venv
+
       - run:
           name: Make
           command: make
@@ -76,8 +106,15 @@ jobs:
       - run:
           name: fix workspace stuff
           command: |
-            mkdir -p workspace/<< parameters.python_docker_tag >>
-            cp -r dist/ankitunes.ankiaddon workspace/<< parameters.python_docker_tag >>
+            WORKSPACE=workspace/<< parameters.anki_version >>/<< parameters.python_docker_tag >>
+            mkdir -p "$WORKSPACE"
+            cp dist/ankitunes.ankiaddon "$WORKSPACE"/
+            ANKI_VERSION=$(poetry run python \<<EOF
+            import anki
+            print(anki.version)
+            EOF
+            )
+            echo "$ANKI_VERSION" > "$WORKSPACE"/anki_version
 
       - persist_to_workspace:
           # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
@@ -85,7 +122,8 @@ jobs:
           root: workspace
           # Must be relative path from root
           paths:
-            - << parameters.python_docker_tag >>/ankitunes.ankiaddon
+            - << parameters.anki_version >>/<< parameters.python_docker_tag >>/ankitunes.ankiaddon
+            - << parameters.anki_version >>/<< parameters.python_docker_tag >>/anki_version
 
   register:
     executor:
@@ -104,7 +142,15 @@ jobs:
 
       - run:
           name: register
-          command: poetry run .circleci/publish --addon-id 1456964007 --title 'AnkiTunes' --addon-zip workspace/3.8/ankitunes.ankiaddon
+          command: |
+            WORKSPACE=workspace/latest/3.8
+            ANKI_VERSION=$(cat $WORKSPACE/anki_version)
+            poetry run .circleci/publish \
+              --addon-id 1456964007 \
+              --title 'AnkiTunes' \
+              --addon-zip $WORKSPACE/ankitunes.ankiaddon \
+              --min-version 2.1.41 \
+              --max-version "$ANKI_VERSION"
 
 workflows:
   testAndRegister:
@@ -114,6 +160,7 @@ workflows:
             parameters:
               #python_docker_tag: ["3.8", "3.9"]
               python_docker_tag: ["3.8", "3.9"]
+              anki_version: ["2.1.41", "2.1.42", "latest"]
           filters:
             tags:
               only: /^v\d+\.\d+\.\d+.*$/
@@ -124,3 +171,4 @@ workflows:
           filters:
             branches:
               only: master
+

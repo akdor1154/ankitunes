@@ -108,7 +108,7 @@ def getReadme(md: str) -> str:
 	MD = mistune.create_markdown(renderer=AnkiRenderer())
 	return MD(md)
 
-def main(addonPath: str, addonId: str, title: str) -> None:
+def main(addonPath: str, addonId: str, title: str, minVersion: int, maxVersion: int) -> None:
 	if os.path.exists('ENVIRONMENT'):
 		with open('ENVIRONMENT') as envFile:
 			for line in envFile:
@@ -131,8 +131,10 @@ def main(addonPath: str, addonId: str, title: str) -> None:
 	login(s, user, passw)
 
 	with open(addonPath, 'rb') as ankiAddon:
-		upload(s, ankiAddon, addonId, title, 45, 45, readmeHtml)
+		upload(s, ankiAddon, addonId, title, minVersion, maxVersion, readmeHtml)
 
+def getMinorVer(verString: str) -> int:
+	return int(verString.split('.')[2])
 
 if __name__ == '__main__':
 	import argparse
@@ -140,9 +142,16 @@ if __name__ == '__main__':
 	parser.add_argument('--addon-id', required=True)
 	parser.add_argument('--title', required=True)
 	parser.add_argument('--addon-zip', default='dist/ankitunes.ankiaddon')
+	parser.add_argument('--min-version', required=True, help='e.g. 2.1.42')
+	parser.add_argument('--max-version', required=True, help='e.g. 2.1.69')
 	args = parser.parse_args()
 
-	main(args.addon_zip, args.addon_id, args.title)
+	minVer, maxVer = (
+		getMinorVer(ver)
+		for ver in [args.min_version, args.max_version]
+	)
+
+	main(args.addon_zip, args.addon_id, args.title, minVer, maxVer)
 
 # curl 'https://ankiweb.net/shared/upload' \
 # -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0' \
