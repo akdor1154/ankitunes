@@ -101,8 +101,16 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 		document.getElementById('ansbut').click()
 	''')
 
-	# wait for them notes
-	qtbot.wait(500)
+
+	# wait for the reviewer to show
+	with wait_hook(qtbot, aqt.gui_hooks.reviewer_did_show_answer):
+		pass
+
+	# wait for reviewer webview
+	with qtbot.waitCallback() as cb:
+		mw.reviewer.web.evalWithCallback(";", cb)
+
+	qtbot.wait(100)
 
 	# check both tunes are there
 	with qtbot.waitCallback() as cb:
