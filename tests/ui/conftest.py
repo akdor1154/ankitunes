@@ -92,6 +92,7 @@ def _install_ankitunes(profile_dir: str, addon_bundle: Optional[str]) -> None:
 		if d == oldD:
 			raise Exception('couldn\'t find project root')
 
+	# something in anki is CDing and I can't work out what.
 	os.chdir(d)
 
 	if addon_bundle is not None:
@@ -148,10 +149,13 @@ def with_wm():
 def screenshot():
 	import subprocess
 
+	os.makedirs('screenshots', exist_ok=True)
+
 	subprocess.run(
 		'scrot',
 		shell=True,
-		check=True
+		check=True,
+		cwd='screenshots'
 	)
 
 
