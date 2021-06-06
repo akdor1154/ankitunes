@@ -103,10 +103,15 @@ from typing import NamedTuple
 
 @pytest.fixture(scope='session')
 def fix_qt(*args, **kwargs) -> None:
+	if 'xvfb' not in os.environ.get('XAUTHORITY', ''):
+		return
+
 	if os.environ.get('XDG_SESSION_TYPE') == 'wayland':
 		print('overridding wayland session to run tests under xvfb')
 		os.environ['QT_QPA_PLATFORM'] = 'xcb'
-	return
+
+	with with_wm():
+		yield
 
 @pytest.fixture(scope='session')
 def qapp(fix_qt, qapp):
@@ -165,25 +170,22 @@ def anki_running(qtbot: QtBot, ankiaddon_cmd, install_ankitunes: bool = True) ->
 
 	AnkiApp.secondInstance = mock_secondInstance
 
-	import os
-
 	# we need a new user for the test
-	with with_wm():
-		with temporary_dir() as dir_name:
-			if install_ankitunes:
-				_install_ankitunes(dir_name, ankiaddon_cmd)
-			with temporary_user(dir_name) as user_name:
-				argv=["anki", "-p", user_name, "-b", dir_name]
-				print(f'running anki with argv={argv}')
-				app = _run(argv=argv, exec=False)
-				assert app is not None
-				try:
-					qtbot.addWidget(aqt.mw)
-					yield app
-					screenshot()
-				finally:
-					# clean up what was spoiled
-					app.closeAllWindows()
+	with temporary_dir() as dir_name:
+		if install_ankitunes:
+			_install_ankitunes(dir_name, ankiaddon_cmd)
+		with temporary_user(dir_name) as user_name:
+			argv=["anki", "-p", user_name, "-b", dir_name]
+			print(f'running anki with argv={argv}')
+			app = _run(argv=argv, exec=False)
+			assert app is not None
+			try:
+				qtbot.addWidget(aqt.mw)
+				yield app
+				screenshot()
+			finally:
+				# clean up what was spoiled
+				app.closeAllWindows()
 
 
 	# remove hooks added during app initialization
