@@ -14,26 +14,25 @@ executors:
       - image: akdor1154/cimg-ankitunes:3.8
 
 jobs:
-  test:
+  lint:
     parameters:
       python_docker_tag:
         type: string
     executor:
       name: python_docker
       python_docker_tag: << parameters.python_docker_tag >>
-    steps:
 
+    steps:
       - checkout
 
       - restore_cache:
           keys:
             - >
-              v1
+              v2
               python_artifacts
               << parameters.python_docker_tag >>
               {{ checksum "pyproject.toml" }}
               {{ checksum "poetry.lock" }}
-
 
       - run:
           name: Install test dependencies
@@ -41,17 +40,83 @@ jobs:
 
       - save_cache:
           key: >
-              v1
+              v2
               python_artifacts
               << parameters.python_docker_tag >>
               {{ checksum "pyproject.toml" }}
               {{ checksum "poetry.lock" }}
           paths:
             - .venv
+            - /home/circleci/.cache/pypoetry
+
+      - restore_cache:
+          keys:
+            - >
+              v1
+              mypy_cache
+              << parameters.python_docker_tag >>
+              {{ checksum "pyproject.toml" }}
+              {{ checksum "poetry.lock" }}
 
       - run:
           name: mypy
           command: poetry run mypy ankitunes
+
+      - save_cache:
+          key: >
+              v1
+              mypy_cache
+              << parameters.python_docker_tag >>
+              {{ checksum "pyproject.toml" }}
+              {{ checksum "poetry.lock" }}
+          paths:
+            - .mypy_cache
+
+  test:
+    parameters:
+      python_docker_tag:
+        type: string
+      anki_version:
+        type: string
+    executor:
+      name: python_docker
+      python_docker_tag: << parameters.python_docker_tag >>
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - >
+              v3
+              python_artifacts_with_anki_version
+              << parameters.python_docker_tag >>
+              << parameters.anki_version >>
+              {{ checksum "pyproject.toml" }}
+              {{ checksum "poetry.lock" }}
+
+      - run:
+          name: Install test dependencies
+          command: |
+            make deps
+
+            if [ "<< parameters.anki_version >>" = "latest" ]; then
+              poetry run pip install --upgrade anki aqt
+            else
+              poetry run pip install anki==<<parameters.anki_version>> aqt==<<parameters.anki_version>>
+            fi
+
+      - save_cache:
+          key: >
+              v3
+              python_artifacts_with_anki_version
+              << parameters.python_docker_tag >>
+              << parameters.anki_version >>
+              {{ checksum "pyproject.toml" }}
+              {{ checksum "poetry.lock" }}
+          paths:
+            - .venv
+            - /home/circleci/.cache/pypoetry
+            - /home/circleci/.cache/pip
 
       - run:
           name: Make
@@ -76,8 +141,15 @@ jobs:
       - run:
           name: fix workspace stuff
           command: |
-            mkdir -p workspace/<< parameters.python_docker_tag >>
-            cp -r dist/ankitunes.ankiaddon workspace/<< parameters.python_docker_tag >>
+            WORKSPACE=workspace/<< parameters.anki_version >>/<< parameters.python_docker_tag >>
+            mkdir -p "$WORKSPACE"
+            cp dist/ankitunes.ankiaddon "$WORKSPACE"/
+            ANKI_VERSION=$(poetry run python \<<EOF
+            import anki
+            print(anki.version)
+            EOF
+            )
+            echo "$ANKI_VERSION" > "$WORKSPACE"/anki_version
 
       - persist_to_workspace:
           # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
@@ -85,7 +157,8 @@ jobs:
           root: workspace
           # Must be relative path from root
           paths:
-            - << parameters.python_docker_tag >>/ankitunes.ankiaddon
+            - << parameters.anki_version >>/<< parameters.python_docker_tag >>/ankitunes.ankiaddon
+            - << parameters.anki_version >>/<< parameters.python_docker_tag >>/anki_version
 
   register:
     executor:
@@ -104,23 +177,39 @@ jobs:
 
       - run:
           name: register
-          command: poetry run .circleci/publish --addon-id 1456964007 --title 'AnkiTunes' --addon-zip workspace/3.8/ankitunes.ankiaddon
+          command: |
+            WORKSPACE=workspace/latest/3.8
+            ANKI_VERSION=$(cat $WORKSPACE/anki_version)
+            poetry run .circleci/publish \
+              --addon-id 1456964007 \
+              --title 'AnkiTunes' \
+              --addon-zip $WORKSPACE/ankitunes.ankiaddon \
+              --min-version 2.1.41 \
+              --max-version "$ANKI_VERSION"
 
 workflows:
   testAndRegister:
     jobs:
+      - lint:
+          matrix:
+            parameters:
+              python_docker_tag: ["3.8", "3.9"]
+
       - test:
           matrix:
             parameters:
               #python_docker_tag: ["3.8", "3.9"]
               python_docker_tag: ["3.8", "3.9"]
+              anki_version: ["2.1.41", "2.1.42", "latest"]
           filters:
             tags:
               only: /^v\d+\.\d+\.\d+.*$/
       - register:
           requires:
+            - lint
             - test
           context: AnkiTunes
           filters:
             branches:
               only: master
+
