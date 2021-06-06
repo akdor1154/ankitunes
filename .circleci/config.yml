@@ -58,7 +58,7 @@ jobs:
       - restore_cache:
           keys:
             - >
-              v1
+              v2
               python_artifacts_with_anki_version
               << parameters.python_docker_tag >>
               << parameters.anki_version >>
@@ -68,18 +68,20 @@ jobs:
       - run:
           name: Force-install Anki version
           command: |
-            cp pyproject.toml pyproject.toml.old
-            cp poetry.lock poetry.lock.old
-            poetry add -D aqt@<< parameters.anki_version >> anki@<< parameters.anki_version >>
+            if [ "<< parameters.anki_version >>" = "latest" ]; then
+              poetry run pip install --uprade anki aqt
+            else
+              poetry run pip install anki@<<parameters.anki_version> aqt@<<parameters.anki_version>>
+            fi
 
       - save_cache:
           key: >
-              v1
+              v2
               python_artifacts_with_anki_version
               << parameters.python_docker_tag >>
               << parameters.anki_version >>
-              {{ checksum "pyproject.toml.old" }}
-              {{ checksum "poetry.lock.old" }}
+              {{ checksum "pyproject.toml" }}
+              {{ checksum "poetry.lock" }}
           paths:
             - .venv
 
