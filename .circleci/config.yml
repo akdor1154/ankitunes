@@ -30,7 +30,7 @@ jobs:
       - restore_cache:
           keys:
             - >
-              v1
+              v2
               python_artifacts
               << parameters.python_docker_tag >>
               {{ checksum "pyproject.toml" }}
@@ -43,13 +43,14 @@ jobs:
 
       - save_cache:
           key: >
-              v1
+              v2
               python_artifacts
               << parameters.python_docker_tag >>
               {{ checksum "pyproject.toml" }}
               {{ checksum "poetry.lock" }}
           paths:
             - .venv
+            - /home/circleci/.cache/pypoetry
 
       - run:
           name: mypy
@@ -69,7 +70,7 @@ jobs:
           name: Force-install Anki version
           command: |
             if [ "<< parameters.anki_version >>" = "latest" ]; then
-              poetry run pip install --uprade anki aqt
+              poetry run pip install --upgrade anki aqt
             else
               poetry run pip install anki@<<parameters.anki_version>> aqt@<<parameters.anki_version>>
             fi
@@ -84,6 +85,7 @@ jobs:
               {{ checksum "poetry.lock" }}
           paths:
             - .venv
+            - /home/circleci/.cache/pip
 
       - run:
           name: Make
