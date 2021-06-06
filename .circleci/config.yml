@@ -109,6 +109,7 @@ workflows:
       - register:
           requires:
             - test
+          context: AnkiTunes
           filters:
             branches:
               only: publish

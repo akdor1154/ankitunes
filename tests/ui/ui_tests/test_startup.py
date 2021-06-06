@@ -9,6 +9,7 @@ from ankitunes.result import Result, Ok, Err
 from textwrap import dedent
 from typing import *
 import aqt.gui_hooks
+import json
 
 import os
 
@@ -110,4 +111,27 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 
 	with qtbot.waitCallback() as cb:
 		mw.reviewer.web.page().findText('The Cup of Tea', resultCallback=cb)
+	assert cb.args == [True]
+
+	# check sheet music is there - find a <title> in <svg> with the tune title.
+	# tuneName needs to match title in ABC, not title in anki note field.
+	def checkForTitleJs(tuneName: str):
+		return f'''
+			var elems = Array.from(document.querySelectorAll('svg title'));
+			var matching = (
+				elems
+				.filter(e => e.textContent.includes({json.dumps(tuneName)}))
+			);
+			(matching.length == 1)
+		'''
+
+
+	with qtbot.waitCallback() as cb:
+		print(checkForTitleJs('Cooley\'s'))
+		mw.reviewer.web.evalWithCallback(checkForTitleJs('Cooley\'s'), cb)
+	assert cb.args == [True]
+
+
+	with qtbot.waitCallback() as cb:
+		mw.reviewer.web.evalWithCallback(checkForTitleJs('The Cup Of Tea'), cb)
 	assert cb.args == [True]
