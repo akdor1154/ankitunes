@@ -7,6 +7,7 @@ import collections
 from typing import *
 import textwrap
 import mistune
+import mistune.renderers
 import os
 
 BASE_URL = 'https://ankiweb.net'
@@ -136,9 +137,9 @@ def main(addonPath: str, addonId: str, title: str) -> None:
 if __name__ == '__main__':
 	import argparse
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--addon-id', nargs=1)
-	parser.add_argument('--title', nargs=1)
-	parser.add_argument('--addon-zip', default='dist/ankitunes.ankiaddon', nargs=1)
+	parser.add_argument('--addon-id', required=True)
+	parser.add_argument('--title', required=True)
+	parser.add_argument('--addon-zip', default='dist/ankitunes.ankiaddon')
 	args = parser.parse_args()
 
 	main(args.addon_zip, args.addon_id, args.title)
