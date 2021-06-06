@@ -186,8 +186,8 @@ def anki_running(qtbot: QtBot, ankiaddon_cmd, install_ankitunes: bool = True) ->
 			try:
 				qtbot.addWidget(aqt.mw)
 				yield app
-				screenshot()
 			finally:
+				screenshot()
 				# clean up what was spoiled
 				app.closeAllWindows()
 
