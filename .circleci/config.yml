@@ -73,13 +73,19 @@ jobs:
           path: screenshots/
           destination: screenshots/
 
+      - run:
+          name: fix workspace stuff
+          command: |
+            mkdir -p workspace/<< parameters.python_docker_tag >>
+            cp -r dist/ankitunes.ankiaddon workspace/<< parameters.python_docker_tag >>
+
       - persist_to_workspace:
           # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
           # taken to be the root directory of the workspace.
-          root: dist
+          root: workspace
           # Must be relative path from root
           paths:
-            - ankitunes.ankiaddon
+            - << parameters.python_docker_tag >>/ankitunes.ankiaddon
 
   register:
     executor:
@@ -87,7 +93,7 @@ jobs:
     steps:
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
-          at: dist
+          at: workspace
 
       - checkout
 
@@ -97,7 +103,7 @@ jobs:
 
       - run:
           name: register
-          command: poetry run .circleci/publish --addon-id 1456964007 --title 'Ankitunes (CircleCI Test)' --addon-zip dist/ankitunes.ankiaddon
+          command: poetry run .circleci/publish --addon-id 1456964007 --title 'Ankitunes (CircleCI Test)' --addon-zip workspace/3.8/ankitunes.ankiaddon
 
 workflows:
   testAndRegister:
