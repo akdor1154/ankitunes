@@ -566,12 +566,12 @@ optional = false
 python-versions = "*"
 
 [extras]
-publish = ["requests"]
+publish = ["requests", "mistune"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "083eb1d68ed556650f59b23659c502e3c29a5ae62cff17a3dd982fa6f0c9857d"
+content-hash = "2ee5006f135ebaada382bf0b7be611c7144c2a960c88e587d651821a8920b3bf"
 
 [metadata.files]
 anki = [
