@@ -160,19 +160,17 @@ def with_wm():
 	if wm.returncode != 0:
 		raise subprocess.CalledProcessError(wm.returncode, wm.args)
 
-def screenshot(winId: int):
-	import subprocess
+def screenshot(mw: AnkiQt):
+	#import subprocess
 
 	os.makedirs('screenshots', exist_ok=True)
 	import datetime
 	import itertools
 	file = os.path.join('screenshots', f'{datetime.datetime.now()}.png')
 
-	subprocess.run(
-		['import', '-window', f'0x{winId:X}', file],
-		#shell=True,
-		check=True
-	)
+	screenshot = mw.screen().grabWindow(mw.winId())
+	img = screenshot.toImage()
+	img.save(file, 'png')
 
 
 @pytest.fixture
@@ -204,9 +202,7 @@ def anki_running(qtbot: QtBot, ankiaddon_cmd: Optional[str], install_ankitunes: 
 				qtbot.addWidget(aqt.mw)
 				yield app
 			finally:
-				#winId = int(aqt.mw.winId())
-
-				#screenshot(winId)
+				screenshot(aqt.mw)
 				# clean up what was spoiled
 				app.closeAllWindows()
 
