@@ -104,7 +104,7 @@ jobs:
 
       - run:
           name: register
-          command: poetry run .circleci/publish --addon-id 1456964007 --title 'Ankitunes (CircleCI Test)' --addon-zip workspace/3.8/ankitunes.ankiaddon
+          command: poetry run .circleci/publish --addon-id 1456964007 --title 'AnkiTunes' --addon-zip workspace/3.8/ankitunes.ankiaddon
 
 workflows:
   testAndRegister:
@@ -123,4 +123,4 @@ workflows:
           context: AnkiTunes
           filters:
             branches:
-              only: publish
+              only: master
