@@ -100,7 +100,7 @@ jobs:
 
       - run:
           name: Install publish deps
-          command: poetry install -E publish
+          command: poetry install -E publish --no-dev
 
       - run:
           name: register
