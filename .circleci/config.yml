@@ -91,11 +91,12 @@ jobs:
     executor:
       name: publisher
     steps:
+
+      - checkout
+
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
           at: workspace
-
-      - checkout
 
       - run:
           name: Install publish deps
