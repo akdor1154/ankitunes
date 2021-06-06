@@ -49,9 +49,28 @@ jobs:
             - .venv
             - /home/circleci/.cache/pypoetry
 
+      - restore_cache:
+          keys:
+            - >
+              v1
+              mypy_cache
+              << parameters.python_docker_tag >>
+              {{ checksum "pyproject.toml" }}
+              {{ checksum "poetry.lock" }}
+
       - run:
           name: mypy
           command: poetry run mypy ankitunes
+
+      - save_cache:
+          key: >
+              v1
+              mypy_cache
+              << parameters.python_docker_tag >>
+              {{ checksum "pyproject.toml" }}
+              {{ checksum "poetry.lock" }}
+          paths:
+            - .mypy_cache
 
   test:
     parameters:
