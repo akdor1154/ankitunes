@@ -11,7 +11,7 @@ executors:
       - image: akdor1154/cimg-ankitunes:<< parameters.python_docker_tag >>
   publisher:
     docker:
-      - image: cimg/python:3.9
+      - image: akdor1154/cimg-ankitunes:3.8
 
 jobs:
   test:
@@ -67,23 +67,44 @@ jobs:
 
       - store_artifacts:
           path: dist/ankitunes.ankiaddon
-          destination: dist/ankitunes.ankiaddon
+          destination: ''
+
+      - store_artifacts:
+          path: screenshots/
+          destination: screenshots/
+
+      - run:
+          name: fix workspace stuff
+          command: |
+            mkdir -p workspace/<< parameters.python_docker_tag >>
+            cp -r dist/ankitunes.ankiaddon workspace/<< parameters.python_docker_tag >>
+
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
+          # taken to be the root directory of the workspace.
+          root: workspace
+          # Must be relative path from root
+          paths:
+            - << parameters.python_docker_tag >>/ankitunes.ankiaddon
 
   register:
     executor:
       name: publisher
     steps:
-      - run:
-          name: Install poetry
-          command: |
-            python -m pip install --upgrade poetry
-            poetry config virtualenvs.in-project true
 
       - checkout
 
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: workspace
+
+      - run:
+          name: Install publish deps
+          command: poetry install -E publish --no-dev
+
       - run:
           name: register
-          command: .circleci/publish.sh
+          command: poetry run .circleci/publish --addon-id 1456964007 --title 'AnkiTunes' --addon-zip workspace/3.8/ankitunes.ankiaddon
 
 workflows:
   testAndRegister:
@@ -99,9 +120,7 @@ workflows:
       - register:
           requires:
             - test
-          context: Ankitunes
+          context: AnkiTunes
           filters:
-            tags:
-              only: /^v\d+\.\d+\.\d+.*$/
             branches:
-              ignore: /.*/
+              only: master

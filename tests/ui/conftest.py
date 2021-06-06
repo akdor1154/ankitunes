@@ -11,7 +11,11 @@ import os
 import os.path
 
 import sys
+import anki
+import anki.collection
+import aqt.addons
 from warnings import warn
+from aqt.main import AnkiQt
 
 import pytest
 from  pytestqt.qtbot import QtBot
@@ -62,13 +66,8 @@ def temporary_dir() -> Generator[str, None, None]:
 def ankiaddon_cmd(request):
 	return request.config.getoption('--ankiaddon')
 
-def _install_ankitunes_bundle(profile_dir: str, addon_bundle: str) -> None:
-	addons_dir = os.path.join(profile_dir, 'addons21/')
-	os.makedirs(addons_dir, exist_ok=True)
 
-	shutil.copy(src=addon_bundle, dst=addons_dir)
-
-def _install_ankitunes_direct(profile_dir: str):
+def _install_ankitunes_direct(profile_dir: str) -> None:
 	import importlib
 	ankitunesSpec = importlib.util.find_spec('ankitunes')
 
@@ -84,7 +83,7 @@ def _install_ankitunes_direct(profile_dir: str):
 
 	os.symlink(src=ankitunes_dir, dst=ankitunes_addon_dir)
 
-def _install_ankitunes(profile_dir: str, addon_bundle: Optional[str]) -> None:
+def _install_ankitunes(argv: List[str], profile_dir: str, ankiaddon_path: str) -> List[str]:
 	d = os.path.dirname(__file__)
 	while not os.path.exists(os.path.join(d, 'pyproject.toml')):
 		oldD = d
@@ -92,21 +91,42 @@ def _install_ankitunes(profile_dir: str, addon_bundle: Optional[str]) -> None:
 		if d == oldD:
 			raise Exception('couldn\'t find project root')
 
-	os.chdir(d)
+	if ankiaddon_path is not None:
 
-	if addon_bundle is not None:
-		return _install_ankitunes_bundle(profile_dir, addon_bundle)
+		def installAddon(self: AnkiQt, path: str, startup: bool = False) -> None:
+			print('boo')
+			from aqt.addons import installAddonPackages
+
+			installAddonPackages(
+				self.addonManager,
+				[path],
+				warn=False, # True,
+				advise_restart=not startup,
+				strictly_modal=False, # startup,
+				parent=None if startup else self,
+			)
+		AnkiQt.installAddon = installAddon
+
+		return argv + [ankiaddon_path]
 	else:
-		return _install_ankitunes_direct(profile_dir)
+		_install_ankitunes_direct(profile_dir)
+		return argv
+
 
 from typing import NamedTuple
 
 @pytest.fixture(scope='session')
 def fix_qt(*args, **kwargs) -> None:
+	if 'xvfb' not in os.environ.get('XAUTHORITY', ''):
+		yield
+		return
+
 	if os.environ.get('XDG_SESSION_TYPE') == 'wayland':
 		print('overridding wayland session to run tests under xvfb')
 		os.environ['QT_QPA_PLATFORM'] = 'xcb'
-	return
+
+	with with_wm():
+		yield
 
 @pytest.fixture(scope='session')
 def qapp(fix_qt, qapp):
@@ -140,18 +160,21 @@ def with_wm():
 	if wm.returncode != 0:
 		raise subprocess.CalledProcessError(wm.returncode, wm.args)
 
-def screenshot():
-	import subprocess
+def screenshot(mw: AnkiQt):
+	#import subprocess
 
-	subprocess.run(
-		'scrot',
-		shell=True,
-		check=True
-	)
+	os.makedirs('screenshots', exist_ok=True)
+	import datetime
+	import itertools
+	file = os.path.join('screenshots', f'{datetime.datetime.now()}.png')
+
+	screenshot = mw.screen().grabWindow(mw.winId())
+	img = screenshot.toImage()
+	img.save(file, 'png')
 
 
 @pytest.fixture
-def anki_running(qtbot: QtBot, ankiaddon_cmd, install_ankitunes: bool = True) -> Generator[aqt.AnkiApp, None, None]:
+def anki_running(qtbot: QtBot, ankiaddon_cmd: Optional[str], install_ankitunes: bool = True) -> Generator[aqt.AnkiApp, None, None]:
 
 	clean_hooks()
 
@@ -165,25 +188,23 @@ def anki_running(qtbot: QtBot, ankiaddon_cmd, install_ankitunes: bool = True) ->
 
 	AnkiApp.secondInstance = mock_secondInstance
 
-	import os
-
 	# we need a new user for the test
-	with with_wm():
-		with temporary_dir() as dir_name:
-			if install_ankitunes:
-				_install_ankitunes(dir_name, ankiaddon_cmd)
-			with temporary_user(dir_name) as user_name:
-				argv=["anki", "-p", user_name, "-b", dir_name]
-				print(f'running anki with argv={argv}')
-				app = _run(argv=argv, exec=False)
-				assert app is not None
-				try:
-					qtbot.addWidget(aqt.mw)
-					yield app
-					screenshot()
-				finally:
-					# clean up what was spoiled
-					app.closeAllWindows()
+	with temporary_dir() as dir_name:
+		with temporary_user(dir_name) as user_name:
+
+			argv=["anki", "-p", user_name, "-b", dir_name]
+			argv = _install_ankitunes(argv, dir_name, ankiaddon_cmd)
+
+			print(f'running anki with argv={argv}')
+			app = _run(argv=argv, exec=False)
+			assert app is not None
+			try:
+				qtbot.addWidget(aqt.mw)
+				yield app
+			finally:
+				screenshot(aqt.mw)
+				# clean up what was spoiled
+				app.closeAllWindows()
 
 
 	# remove hooks added during app initialization

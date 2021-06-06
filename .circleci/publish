@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+
+import requests
+import io
+import html.parser
+import collections
+from typing import *
+import textwrap
+import mistune
+import mistune.renderers
+import os
+
+BASE_URL = 'https://ankiweb.net'
+
+def get_csrf(body: io.BytesIO) -> str:
+	q: Deque[str] = collections.deque()
+	class MyParser(html.parser.HTMLParser):
+		def handle_starttag(self, tag: str, attrs: List[Tuple[str, Optional[str]]]) -> None:
+			if tag != 'input':
+				return
+			attrsDict = dict(attrs)
+			if attrsDict['name'] != 'csrf_token':
+				return
+			if attrsDict['value'] is None:
+				return
+			q.append(attrsDict['value'])
+	p = MyParser()
+	try:
+		for chunk in body:
+			p.feed(chunk.decode('utf-8'))
+			for item in q:
+				return item
+		else:
+			raise Exception('couldn\'t find csrf token')
+	finally:
+		p.close()
+
+
+def login(session: requests.Session, username: str, password: str) -> None:
+	loginPage = session.get(
+		url=BASE_URL+'/account/login',
+		stream=True
+	)
+	loginPage.raise_for_status()
+	with loginPage.raw:
+		token=get_csrf(loginPage.raw)
+	loginPage.close()
+
+	resp = session.post(
+		url=BASE_URL+'/account/login',
+		data={
+			'submitted':'1',
+			'csrf_token':token,
+			'username':username,
+			'password':password
+		}
+	)
+	resp.raise_for_status()
+
+	assert 'ankiweb' in session.cookies and session.cookies['ankiweb'] != 'login', 'Cookie missing, login probably failed.'
+	print(session.cookies['ankiweb'])
+
+def upload(session: requests.Session, file: 'BinaryIO', addonId: str, title: str, minMinorVersion: int, maxMinorVersion: int, readmeHtml: str) -> None:
+
+	resp = session.post(
+		url=BASE_URL+'/shared/upload',
+		headers={
+			'User-Agent': 'my dodgy CI script, plz give us an api'
+		},
+		data={
+			'id':addonId,
+			'title': title,
+			'tags': 'tunes, irish, itm, thesession, the session',
+			'supportURL': 'https://github.com/akdor1154/ankitunes',
+			'minVer0': str(minMinorVersion),
+			'maxVer0': str(maxMinorVersion),
+			'desc': readmeHtml,
+			'submit': 'Update'
+		},
+		files={
+			'v21file0': ('ankitunes.ankiaddon', file)
+		}
+	)
+	resp.raise_for_status()
+
+#Available HTML tags: img, a, b, i, code, ul, ol, li.
+def getReadme(md: str) -> str:
+	class AnkiRenderer(mistune.renderers.HTMLRenderer):
+		def emphasis(self, text: str) -> str:
+			return '<i>' + text + '</i>'
+		def strong(self, text: str) -> str:
+			return '<b>' + text + '</b>'
+		def linebreak(self) -> str:
+			return '\n'
+		def paragraph(self, text: str) -> str:
+			return text + '\n\n'
+
+		def heading(self, text: str, level: int) -> str:
+			#tag = 'h' + str(level)
+			tag = 'b'
+			return '<' + tag + '>' + text + '</' + tag + '>\n'
+
+		def thematic_break(self) -> str:
+			return '--------\n'
+
+		def block_quote(self, text: str) -> str:
+			return '\n<i>' + text + '</i>\n'
+	MD = mistune.create_markdown(renderer=AnkiRenderer())
+	return MD(md)
+
+def main(addonPath: str, addonId: str, title: str) -> None:
+	if os.path.exists('ENVIRONMENT'):
+		with open('ENVIRONMENT') as envFile:
+			for line in envFile:
+				key, val = (
+					s.strip()
+					for s in line.strip().split('=', 1)
+					if line.strip() != ''
+				)
+				os.environ[key] = val
+
+	user, passw = (
+		s.strip()
+		for s in os.environ['ANKIWEB_CREDENTIALS'].split(':', 1)
+	)
+
+	with open('README.md') as readmeFile:
+		readmeHtml = getReadme(readmeFile.read())
+
+	s = requests.Session()
+	login(s, user, passw)
+
+	with open(addonPath, 'rb') as ankiAddon:
+		upload(s, ankiAddon, addonId, title, 45, 45, readmeHtml)
+
+
+if __name__ == '__main__':
+	import argparse
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--addon-id', required=True)
+	parser.add_argument('--title', required=True)
+	parser.add_argument('--addon-zip', default='dist/ankitunes.ankiaddon')
+	args = parser.parse_args()
+
+	main(args.addon_zip, args.addon_id, args.title)
+
+# curl 'https://ankiweb.net/shared/upload' \
+# -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0' \
+# -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' \
+# -H 'Accept-Language: en-GB,en;q=0.5' \
+# --compressed \
+# -H 'Referer: https://ankiweb.net/shared/upload?id=1456964007' \
+# -H 'Content-Type: multipart/form-data; boundary=---------------------------199144852533685843341430090735' \
+# -H 'Origin: https://ankiweb.net' \
+# -H 'DNT: 1' \
+# -H 'Connection: keep-alive' \
+# -H 'Cookie: ankiweb=CENSORED' \
+# -H 'Upgrade-Insecure-Requests: 1' \
+# -H 'TE: Trailers' \
+# --data-binary $'-----------------------------199144852533685843341430090735\r\n
+# Content-Disposition: form-data; name="title"\r\n
+# \r\n
+# AnkiTunes\r\n
+# -----------------------------199144852533685843341430090735\r\n
+# Content-Disposition: form-data; name="tags"\r\n
+# \r\n
+# tunes, irish, itm, thesession, the session\r\n
+# -----------------------------199144852533685843341430090735\r\n
+# Content-Disposition: form-data; name="supportURL"\r\n
+# \r\n
+# https://github.com/akdor1154/ankitunes\r\n
+# -----------------------------199144852533685843341430090735\r\n
+# Content-Disposition: form-data; name="v21file0"; filename="ankitunes.ankiaddon"\r\n
+# Content-Type: application/octet-stream\r\n
+# \r\n
+# -----------------------------199144852533685843341430090735\r\n
+# Content-Disposition: form-data; name="minVer0"\r\n
+# \r\n
+# 45\r\n
+# -----------------------------199144852533685843341430090735\r\n
+# Content-Disposition: form-data; name="maxVer0"\r\n
+# \r\n
+# 45\r\n
+# -----------------------------199144852533685843341430090735\r\n
+# Content-Disposition: form-data; name="desc"\r\n
+# \r\n
+# Test upload...\r\n
+# -----------------------------199144852533685843341430090735\r\n
+# Content-Disposition: form-data; name="id"\r\n
+# \r\n
+# 1456964007\r\n
+# -----------------------------199144852533685843341430090735\r\n
+# Content-Disposition: form-data; name="submit"\r\n
+# \r\n
+# Update\r\n
+# -----------------------------199144852533685843341430090735--\r\n'

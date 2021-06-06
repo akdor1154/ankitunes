@@ -22,6 +22,7 @@ build: dist/ankitunes.ankiaddon
 dist/ankitunes.ankiaddon: typescript
 	rm -rf dist/*
 	poetry build
-	mkdir dist/wheel
-	cd dist/wheel; unzip ../ankitunes-*.whl
-	cd dist/wheel/ankitunes; zip -r ../../ankitunes.ankiaddon *
+	mkdir dist/addon
+	cd dist/addon; unzip ../ankitunes-*.whl
+	cp ankiweb_manifest.json dist/addon/ankitunes/manifest.json
+	cd dist/addon/ankitunes; zip -r ../../ankitunes.ankiaddon *
