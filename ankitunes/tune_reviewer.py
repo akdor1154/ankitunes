@@ -1,5 +1,6 @@
 
 
+from ankitunes.errors import error
 import aqt
 import aqt.gui_hooks
 from aqt.qt import debug
@@ -51,7 +52,11 @@ def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -
 
 	# get extra cards from scheduler
 	tune_type_val = focus_note['Tune Type']
-	key, tune_type = tune_type_val.split(' ', 1)
+	try:
+		key, tune_type = tune_type_val.split(' ', 1)
+	except ValueError:
+		error(f"Note {focus_note['Name'] if 'Name' in focus_note else ''} has an invalid tune type. Please set it to something like 'Gm reel' (key type)")
+		return [focus_card]
 
 	# readability
 	def join(a: Union[str, SearchNode], op: anki.collection.SearchJoiner, b: Union[str, SearchNode]) -> SearchNode:
@@ -62,19 +67,18 @@ def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -
 	deck = col.decks.get(focus_card.did)
 	if deck is None:
 		# TODO
-		raise Exception('No deck!')
-
-	deck_name = deck['name']
+		error('Deck missing for card!')
 
 	search = (
-		col.group_searches(
-			join(
-				f'"Tune Type:* {tune_type}"',
-				'OR',
-				f'"Tune Type:{tune_type}"',
-			),
-			SearchNode(negated=SearchNode(nid=focus_card.nid)),
-			SearchNode(deck=deck_name),
+		col.group_searches(*[
+				join(
+					f'"Tune Type:* {tune_type}"',
+					'OR',
+					f'"Tune Type:{tune_type}"',
+				),
+				SearchNode(negated=SearchNode(nid=focus_card.nid)),
+				*([SearchNode(deck=deck['name'])] if deck is not None else []),
+			],
 			joiner='AND'
 		)
 	)
@@ -146,8 +150,8 @@ def update_answer_buttons(focus_card: Card) -> None:
 	note = focus_card.note()
 	Name = 'Name'
 	if Name not in note:
-		# TODO
-		raise Exception(f'`{Name}` field missing!')
+		error(f'`{Name}` field missing! This means update_answer_buttons was called with a non-ankitunes card. Bug!')
+		return
 
 	name = note[Name]
 	html = f'<p>How hard was {name}?</p>'
@@ -171,6 +175,12 @@ def on_card_will_show_ans(ans: str, focus_card: Card, show_type: str) -> HTML:
 	return newAns
 
 def on_reviewer_did_show_ans(focus_card: Card) -> None:
+	if not is_reviewing_tunes:
+		return
+
+	# if not hasattr(focus_card, '_ankitunes_set'):
+	# 	return
+
 	update_answer_buttons(focus_card)
 
 def on_main_window_did_init() -> None:

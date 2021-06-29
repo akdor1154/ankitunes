@@ -11,6 +11,8 @@ from typing import *
 
 import anki.collection
 
+os.environ['ANKITUNES_HARD_MODE'] = '1' # warnings are now exceptions
+
 _masterFilePath: Optional[str] = None
 def _getMasterFilePath() -> str:
 	global _masterFilePath
