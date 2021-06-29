@@ -1,10 +1,11 @@
 
+
 import aqt
 import aqt.gui_hooks
 from aqt.qt import debug
 import aqt.webview
 from anki.cards import Card
-from anki.collection import BuiltinSort, SearchNode
+from anki.collection import BuiltinSort, SearchNode, Collection as AnkiCollection
 
 import aqt.reviewer
 import anki.collection
@@ -16,6 +17,7 @@ import json
 from typing import *
 
 from .util import mw
+from .col_note_type import is_ankitunes_nt
 
 HTML = NewType('HTML', str)
 Scheduler = Union[anki.sched.Scheduler, anki.schedv2.Scheduler]
@@ -46,6 +48,7 @@ def set_up_reviewer_bottom(web_content: aqt.webview.WebContent, context: Any) ->
 def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -> Sequence[Card]:
 
 	focus_note = focus_card.note()
+
 	# get extra cards from scheduler
 	tune_type_val = focus_note['Tune Type']
 	key, tune_type = tune_type_val.split(' ', 1)
@@ -54,17 +57,25 @@ def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -
 	def join(a: Union[str, SearchNode], op: anki.collection.SearchJoiner, b: Union[str, SearchNode]) -> SearchNode:
 		return col.group_searches(a, b, joiner=op)
 
-	SET_NUM_TUNES = 2
+	SET_NUM_TUNES = 3
+
+	deck = col.decks.get(focus_card.did)
+	if deck is None:
+		# TODO
+		raise Exception('No deck!')
+
+	deck_name = deck['name']
 
 	search = (
-		join(
+		col.group_searches(
 			join(
 				f'"Tune Type:* {tune_type}"',
 				'OR',
 				f'"Tune Type:{tune_type}"',
 			),
-			'AND',
-			SearchNode(negated=SearchNode(nid=focus_card.nid))
+			SearchNode(negated=SearchNode(nid=focus_card.nid)),
+			SearchNode(deck=deck_name),
+			joiner='AND'
 		)
 	)
 	search_str = col.build_search_string(search)
@@ -94,13 +105,18 @@ def format_set_question(cards: Sequence[Card]) -> HTML:
 		'\n'.join(card.q() for card in cards)
 	)
 
-def on_card_will_show_qn(q: str, card: Card, show_type: str) -> HTML:
+def on_card_will_show_qn(q: str, card: Card, show_type: str, /, col: Optional[AnkiCollection] = None) -> HTML:
 	if not is_reviewing_tunes:
 		return HTML(q)
 	if show_type != 'reviewQuestion':
 		return HTML(q)
+	if not is_ankitunes_nt(card.model()):
+		return HTML(q)
 
-	cards = turn_card_into_set(cast(FocusCard, card), mw().col)
+	# for testing..
+	col = col or mw().col
+
+	cards = turn_card_into_set(cast(FocusCard, card), col)
 	newQ = format_set_question(cards)
 
 	return newQ

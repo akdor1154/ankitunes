@@ -172,7 +172,6 @@ def screenshot(mw: AnkiQt):
 	img = screenshot.toImage()
 	img.save(file, 'png')
 
-
 @pytest.fixture
 def anki_running(qtbot: QtBot, ankiaddon_cmd: Optional[str], install_ankitunes: bool = True) -> Generator[aqt.AnkiApp, None, None]:
 
