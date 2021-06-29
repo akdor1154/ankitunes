@@ -162,6 +162,9 @@ def on_card_will_show_ans(ans: str, focus_card: Card, show_type: str) -> HTML:
 	if show_type != 'reviewAnswer':
 		return HTML(ans)
 
+	if not hasattr(focus_card, '_ankitunes_set'):
+		return HTML(ans)
+
 	cards = get_set_from_base_card(cast(FocusCard, focus_card))
 	newAns = format_set_answers(cards)
 
