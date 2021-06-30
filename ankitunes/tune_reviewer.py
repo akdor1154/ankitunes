@@ -1,6 +1,5 @@
 
 
-from ankitunes.errors import error
 import aqt
 import aqt.gui_hooks
 from aqt.qt import debug
@@ -17,6 +16,7 @@ import random
 import json
 from typing import *
 
+from .errors import error, ErrorMode
 from .util import mw
 from .col_note_type import is_ankitunes_nt
 
@@ -52,22 +52,40 @@ def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -
 
 	# get extra cards from scheduler
 	tune_type_val = focus_note['Tune Type']
+
+	note_name = focus_note['Name'] if 'Name' in focus_note else '[unnamed]'
+
 	try:
 		key, tune_type = tune_type_val.split(' ', 1)
 	except ValueError:
-		error(f"Note {focus_note['Name'] if 'Name' in focus_note else ''} has an invalid tune type. Please set it to something like 'Gm reel' (key type)")
+		error(
+			f"Note {note_name} has an invalid tune type.<br />"
+			"This means I can't find tunes to go with it in a set.<br />"
+			"Please set it to something like <i>Gm reel</i>.",
+			mode=ErrorMode.HINT
+		)
 		return [focus_card]
 
 	# readability
 	def join(a: Union[str, SearchNode], op: anki.collection.SearchJoiner, b: Union[str, SearchNode]) -> SearchNode:
 		return col.group_searches(a, b, joiner=op)
 
-	SET_NUM_TUNES = 3
+	SET_NUM_TUNES = random.choices(
+		[1, 2, 3],
+		weights=[1, 3, 1],
+		k=1
+	)[0]
 
 	deck = col.decks.get(focus_card.did)
 	if deck is None:
-		# TODO
-		error('Deck missing for card!')
+		error(
+			f"Note {note_name} is not in a deck."
+			"AnkiTunes only works with cards that are in a deck,"
+			"and I'm pretty sure Anki only lets you make cards if they're in a deck,"
+			"so I'm not sure how we ended up here.\n\n"
+			"This might be a bug, feel free to whinge/open a github issue.",
+			mode=ErrorMode.SCARY_WARNING
+		)
 
 	search = (
 		col.group_searches(*[

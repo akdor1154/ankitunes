@@ -1,12 +1,31 @@
 import os
 from typing import *
+from enum import Enum, auto
+from aqt.utils import tooltip
+class ErrorMode(Enum):
+	RAISE=auto()
+	SCARY_WARNING = auto()
+	HINT = auto()
 
-if os.environ.get('ANKITUNES_HARD_MODE') not in (None, '0', ''):
-	def error(msg: str) -> Union[NoReturn, None]:
+@overload
+def error(msg: str, mode: Literal[ErrorMode.RAISE]) -> NoReturn: ...
+@overload
+def error(msg: str, mode: ErrorMode) -> Union[NoReturn, None]: ...
+
+def error(msg: str, mode: ErrorMode = ErrorMode.SCARY_WARNING) -> Union[NoReturn, None]:
+	if os.environ.get('ANKITUNES_HARD_MODE') not in (None, '0', ''):
 		raise Exception(msg)
-else:
+
 	from warnings import warn
 	import warnings
-	def error(msg: str) -> Union[NoReturn, None]:
+
+	if mode == ErrorMode.HINT:
+		tooltip(msg, period=10000)
+	elif mode == ErrorMode.RAISE:
+		raise Exception(msg)
+	elif mode == ErrorMode.SCARY_WARNING:
 		warn(msg)
-		return None
+	else:
+		warn(msg)
+
+	return None

@@ -12,6 +12,7 @@ import aqt.gui_hooks
 
 from .col_card_type import TemplateMigrator, TPL_VER_KEY
 from .util import mw
+from .errors import ErrorMode, error
 
 from .result import Result, Ok, Err
 
@@ -97,7 +98,12 @@ class TNTMigrator:
 			if nt.get('other', {}).get(NT_KEY) == True
 		]
 		if len(existing_nts) > 1:
-			raise NotImplementedError('Multiple AnkiTunes note types detected. We can currently only deal with one.')
+			error(
+				'I found multiple note types managed by AnkiTunes. I can\'t deal with this: \n'
+				'if you have cloned the AnkiTunes note type yourself, please remove the clone.\n'
+				'If you reject the above accusation of guilt, please raise an issue on the AnkiTunes issue tracker.',
+				mode=ErrorMode.RAISE
+			)
 		if len(existing_nts) == 0:
 			return Ok((FakeVersion.NotExist, None))
 
@@ -212,18 +218,21 @@ class TNTMigrator:
 		current_version_res = self.get_current_version()
 
 		if not isinstance(current_version_res, Ok):
-			#TODO error handling
 			from pprint import pprint
 			pprint(current_version_res)
-			raise Exception('bang')
+			error(
+				'AnkiTunes version migration failed. This may be a bug,<br />'
+				'or it may be because you went and screwed around with the AnkiTunes-managed<br />'
+				'note definitions. If you are sure of your innocence in this matter, please raise a bug.',
+				mode=ErrorMode.RAISE
+			)
 
 		migrate_res = self.migrate(current_version_res.value)
 
 		if not isinstance(migrate_res, Ok):
-			# TODO error handling
 			from pprint import pprint
 			pprint(migrate_res)
-			raise Exception(migrate_res.err_value.msg)
+			raise Exception('AnkiTunes version migration failed. Please raise a bug. Error: '+migrate_res.err_value.msg)
 
 		nt = migrate_res.value
 

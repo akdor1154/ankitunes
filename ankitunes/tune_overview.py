@@ -17,13 +17,6 @@ class TuneOverview:
 	def __init__(self, overview: aqt.overview.Overview) -> None:
 		self.overview = overview
 
-	def _linkHandler(self, url: str) -> bool:
-		if url == "study_sets":
-			# TODO enable set mode
-			return self.overview._linkHandler("study")
-		else:
-			return self.overview._linkHandler(url)
-
 	def overview_did_set_content(self, web_content: aqt.webview.WebContent) -> None:
 		reviewSetsButton = mw().button(
 			"study_sets",
