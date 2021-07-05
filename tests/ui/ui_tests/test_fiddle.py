@@ -9,6 +9,7 @@ from anki.notes import Note
 
 from .. import wait_hook
 
+
 @pytest.mark.fiddle('Interactive debugging only')
 def test_interactive(qtbot: QtBot, anki_running: aqt.AnkiApp) -> None:
 
@@ -41,7 +42,7 @@ def test_interactive(qtbot: QtBot, anki_running: aqt.AnkiApp) -> None:
 	assert deck_id is not None
 
 	for note_input in notes:
-		n = Note(col,  nt)
+		n = Note(col, nt)
 		for field, val in note_input.items():
 			n[field] = val
 		col.add_note(n, deck_id)

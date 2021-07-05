@@ -30,7 +30,10 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.yapf]
 based_on_style = "yapf"
-continuation_align_style = "valign-right"
+continuation_align_style = "fixed"
 use_tabs = true
-SPLIT_BEFORE_FIRST_ARGUMENT = true
-DEDENT_CLOSING_BRACKETS = true
+split_before_first_argument = true
+dedent_closing_brackets = true
+indent_width=1
+continuation_indent_width=1
+column_limit = 120

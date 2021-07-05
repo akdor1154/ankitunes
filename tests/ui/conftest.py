@@ -18,10 +18,11 @@ from warnings import warn
 from aqt.main import AnkiQt
 
 import pytest
-from  pytestqt.qtbot import QtBot
+from pytestqt.qtbot import QtBot
 
 import aqt
 from aqt.profiles import ProfileManager
+
 
 @contextmanager
 def temporary_user(dir_name, name="__Temporary Test User__", lang="en_US") -> Generator[str, None, None]:
@@ -61,7 +62,6 @@ def temporary_dir() -> Generator[str, None, None]:
 		yield tempdir
 
 
-
 @pytest.fixture
 def ankiaddon_cmd(request):
 	return request.config.getoption('--ankiaddon')
@@ -83,6 +83,7 @@ def _install_ankitunes_direct(profile_dir: str) -> None:
 
 	os.symlink(src=ankitunes_dir, dst=ankitunes_addon_dir)
 
+
 def _install_ankitunes(argv: List[str], profile_dir: str, ankiaddon_path: str) -> List[str]:
 	d = os.path.dirname(__file__)
 	while not os.path.exists(os.path.join(d, 'pyproject.toml')):
@@ -100,11 +101,12 @@ def _install_ankitunes(argv: List[str], profile_dir: str, ankiaddon_path: str) -
 			installAddonPackages(
 				self.addonManager,
 				[path],
-				warn=False, # True,
+				warn=False,  # True,
 				advise_restart=not startup,
-				strictly_modal=False, # startup,
+				strictly_modal=False,  # startup,
 				parent=None if startup else self,
 			)
+
 		AnkiQt.installAddon = installAddon
 
 		return argv + [ankiaddon_path]
@@ -114,6 +116,7 @@ def _install_ankitunes(argv: List[str], profile_dir: str, ankiaddon_path: str) -
 
 
 from typing import NamedTuple
+
 
 @pytest.fixture(scope='session')
 def fix_qt(*args, **kwargs) -> None:
@@ -128,9 +131,11 @@ def fix_qt(*args, **kwargs) -> None:
 	with with_wm():
 		yield
 
+
 @pytest.fixture(scope='session')
 def qapp(fix_qt, qapp):
 	yield qapp
+
 
 def clean_hooks() -> None:
 	if 'anki.hooks' in sys.modules:
@@ -149,6 +154,7 @@ def clean_hooks() -> None:
 	if 'ankitunes' in sys.modules:
 		del sys.modules['ankitunes']
 
+
 @contextmanager
 def with_wm():
 	import subprocess
@@ -159,6 +165,7 @@ def with_wm():
 	wm.wait()
 	if wm.returncode != 0:
 		raise subprocess.CalledProcessError(wm.returncode, wm.args)
+
 
 def screenshot(mw: AnkiQt):
 	#import subprocess
@@ -172,8 +179,10 @@ def screenshot(mw: AnkiQt):
 	img = screenshot.toImage()
 	img.save(file, 'png')
 
+
 @pytest.fixture
-def anki_running(qtbot: QtBot, ankiaddon_cmd: Optional[str], install_ankitunes: bool = True) -> Generator[aqt.AnkiApp, None, None]:
+def anki_running(qtbot: QtBot, ankiaddon_cmd: Optional[str],
+	install_ankitunes: bool = True) -> Generator[aqt.AnkiApp, None, None]:
 
 	clean_hooks()
 
@@ -191,7 +200,7 @@ def anki_running(qtbot: QtBot, ankiaddon_cmd: Optional[str], install_ankitunes: 
 	with temporary_dir() as dir_name:
 		with temporary_user(dir_name) as user_name:
 
-			argv=["anki", "-p", user_name, "-b", dir_name]
+			argv = ["anki", "-p", user_name, "-b", dir_name]
 			argv = _install_ankitunes(argv, dir_name, ankiaddon_cmd)
 
 			print(f'running anki with argv={argv}')
@@ -205,7 +214,6 @@ def anki_running(qtbot: QtBot, ankiaddon_cmd: Optional[str], install_ankitunes: 
 				# clean up what was spoiled
 				app.closeAllWindows()
 
-
 	# remove hooks added during app initialization
 	from anki import hooks
 	hooks._hooks = {}
@@ -214,7 +222,9 @@ def anki_running(qtbot: QtBot, ankiaddon_cmd: Optional[str], install_ankitunes: 
 	import locale
 	locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())
 
+
 import argparse
+
 
 def pytest_runtest_setup(item):
 	fiddle_marks = list(item.iter_markers(name='fiddle'))

@@ -1,5 +1,3 @@
-
-
 from anki.notes import Note
 
 import aqt
@@ -17,6 +15,7 @@ from .. import wait_hook
 from .data import notes
 
 SHITTY_WAIT_MS = 200
+
 
 def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 	mw = aqt.mw
@@ -47,7 +46,7 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 	assert deck_id is not None
 
 	for note_input in notes:
-		n = Note(col,  nt)
+		n = Note(col, nt)
 		for field, val in note_input.items():
 			n[field] = val
 		col.add_note(n, deck_id)
@@ -58,16 +57,13 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 	with wait_hook(qtbot, aqt.gui_hooks.deck_browser_did_render):
 		mw.moveToState("deckBrowser")
 
-
 	# move to deck overview and wait
 	with wait_hook(qtbot, aqt.gui_hooks.overview_did_refresh):
 		mw.deckBrowser._selDeck(deck_id)
 
-
 	# wait for overview web to render
 	with qtbot.waitCallback() as cb:
 		mw.overview.web.evalWithCallback(";", cb)
-
 
 	# check the set button is there
 	with qtbot.waitCallback() as cb:
@@ -103,7 +99,6 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 		document.getElementById('ansbut').click()
 	''')
 
-
 	# wait for the reviewer to show
 	with wait_hook(qtbot, aqt.gui_hooks.reviewer_did_show_answer):
 		pass
@@ -135,12 +130,10 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 			(matching.length == 1)
 		'''
 
-
 	with qtbot.waitCallback() as cb:
 		print(checkForTitleJs('Cooley\'s'))
 		mw.reviewer.web.evalWithCallback(checkForTitleJs('Cooley\'s'), cb)
 	assert cb.args == [True]
-
 
 	with qtbot.waitCallback() as cb:
 		mw.reviewer.web.evalWithCallback(checkForTitleJs('The Cup Of Tea'), cb)

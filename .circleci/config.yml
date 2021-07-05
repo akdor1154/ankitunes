@@ -49,6 +49,10 @@ jobs:
             - .venv
             - /home/circleci/.cache/pypoetry
 
+      - run:
+          name: Formatting check
+          command: poetry run yapf --parallel --recursive --diff --exclude ankitunes/web/note_modules/\* ankitunes tests
+
       - restore_cache:
           keys:
             - >

@@ -4,10 +4,16 @@ from typing import *
 
 H = TypeVar('H')
 
+
 class AnkiHook(Protocol[H]):
 	_hooks: List[H]
-	def append(self, hook: H) -> Any: ...
-	def remove(self, hook: H) -> Any: ...
+
+	def append(self, hook: H) -> Any:
+		...
+
+	def remove(self, hook: H) -> Any:
+		...
+
 
 @contextmanager
 def wait_hook(qtbot: QtBot, hook: AnkiHook[Any]) -> Generator[None, None, None]:

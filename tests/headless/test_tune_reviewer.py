@@ -21,10 +21,8 @@ import ankitunes.col_note_type as NT
 import ankitunes.tune_reviewer as reviewer
 from ankitunes.result import Result, Ok, Err
 
-
-
-
 from ..data import cooleys, cup_of_tea
+
 
 @pytest.fixture
 def mn(empty_collection: AnkiCollection) -> ModelManager:
@@ -35,6 +33,7 @@ def mn(empty_collection: AnkiCollection) -> ModelManager:
 
 	return mn
 
+
 @contextlib.contextmanager
 def setupNoteType(mn: ModelManager) -> Generator[NoteType, None, None]:
 	basic = mn.byName('Basic')
@@ -43,12 +42,14 @@ def setupNoteType(mn: ModelManager) -> Generator[NoteType, None, None]:
 	yield nt
 	mn.save(nt)
 
+
 @dataclass
 class ColAndStuff:
 	col: AnkiCollection
 	cooleys: Card
 	cup_of_tea: Card
 	some_other_note: Card
+
 
 # Todo: share this with other tests when there are som,e
 @pytest.fixture
@@ -60,16 +61,12 @@ def initialized_collection(empty_collection: AnkiCollection, mn: ModelManager) -
 	basic_nt = mn.byName('Basic')
 	assert basic_nt is not None
 
-	ankitunes_nt = mn.byName('AnkiTune') # TODO: will need to change if TNT_NAME becomes configurable
+	ankitunes_nt = mn.byName('AnkiTune')  # TODO: will need to change if TNT_NAME becomes configurable
 	assert ankitunes_nt is not None
-
 
 	# add notes
 	def toNote(note: Dict[str, Any], nt: NoteType) -> Note:
-		n = anki.notes.Note(
-			col=col,
-			model=nt
-		)
+		n = anki.notes.Note(col=col, model=nt)
 		for fieldName, fieldValue in note.items():
 			n[fieldName] = fieldValue
 		return n
@@ -87,18 +84,18 @@ def initialized_collection(empty_collection: AnkiCollection, mn: ModelManager) -
 	# save
 	col.save()
 
-	[cooleys_card, cup_of_tea_card, not_tune_card] = [
-		col.getCard(n.card_ids()[0])
-		for n in [tune, tune2, not_tune]
-	]
+	[cooleys_card, cup_of_tea_card, not_tune_card] = [col.getCard(n.card_ids()[0]) for n in [tune, tune2, not_tune]]
 
 	yield ColAndStuff(col, cooleys_card, cup_of_tea_card, not_tune_card)
 
 	col.close()
 
+
 def test_create_set(initialized_collection: ColAndStuff) -> None:
 	reviewer.is_reviewing_tunes = True
-	html = reviewer.on_card_will_show_qn('<html>Cooleys</html>', initialized_collection.cooleys, 'reviewQuestion', initialized_collection.col, 2)
+	html = reviewer.on_card_will_show_qn(
+		'<html>Cooleys</html>', initialized_collection.cooleys, 'reviewQuestion', initialized_collection.col, 2
+	)
 	assert 'Cooleys' in html
 	assert 'Cup of Tea' in html
 
@@ -108,7 +105,9 @@ def test_create_set(initialized_collection: ColAndStuff) -> None:
 
 
 def test_dont_crash_on_non_ankitunes_card(initialized_collection: ColAndStuff) -> None:
-	html = reviewer.on_card_will_show_qn('<html>Chao</html>', initialized_collection.some_other_note, 'reviewQuestion',  initialized_collection.col, 2)
+	html = reviewer.on_card_will_show_qn(
+		'<html>Chao</html>', initialized_collection.some_other_note, 'reviewQuestion', initialized_collection.col, 2
+	)
 	assert 'Chao' in html
 	html = reviewer.on_card_will_show_ans('<html>Chao</html>', initialized_collection.some_other_note, 'reviewAnswer')
 	assert 'Chao' in html

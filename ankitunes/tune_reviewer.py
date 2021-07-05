@@ -38,25 +38,19 @@ is_reviewing_tunes = False
 ## Webview Hooks
 
 
-def set_up_reviewer_bottom(
-		web_content: aqt.webview.WebContent, context: Any
-) -> None:
+def set_up_reviewer_bottom(web_content: aqt.webview.WebContent, context: Any) -> None:
 	if not isinstance(context, aqt.reviewer.ReviewerBottomBar):
 		return
 
 	addon_package = mw().addonManager.addonFromModule(__name__)
-	web_content.js.append(
-			f'/_addons/{addon_package}/web/dist/reviewer_bottom/reviewer_bottom.js'
-	)
+	web_content.js.append(f'/_addons/{addon_package}/web/dist/reviewer_bottom/reviewer_bottom.js')
 	return
 
 
 ## Question
 
 
-def turn_card_into_set(
-		focus_card: FocusCard, col: anki.collection.Collection, set_length: int
-) -> Sequence[Card]:
+def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection, set_length: int) -> Sequence[Card]:
 
 	focus_note = focus_card.note()
 
@@ -69,44 +63,41 @@ def turn_card_into_set(
 		key, tune_type = tune_type_val.split(' ', 1)
 	except ValueError:
 		error(
-				f"Note {note_name} has an invalid tune type.<br />"
-				"This means I can't find tunes to go with it in a set.<br />"
-				"Please set it to something like <i>Gm reel</i>.",
-				mode=ErrorMode.HINT
+			f"Note {note_name} has an invalid tune type.<br />"
+			"This means I can't find tunes to go with it in a set.<br />"
+			"Please set it to something like <i>Gm reel</i>.",
+			mode=ErrorMode.HINT
 		)
 		return [focus_card]
 
 	# readability
-	def join(
-			a: Union[str, SearchNode], op: anki.collection.SearchJoiner,
-			b: Union[str, SearchNode]
-	) -> SearchNode:
+	def join(a: Union[str, SearchNode], op: anki.collection.SearchJoiner, b: Union[str, SearchNode]) -> SearchNode:
 		return col.group_searches(a, b, joiner=op)
 
 	deck = col.decks.get(focus_card.did)
 	if deck is None:
 		error(
-				f"Note {note_name} is not in a deck."
-				"AnkiTunes only works with cards that are in a deck,"
-				"and I'm pretty sure Anki only lets you make cards if they're in a deck,"
-				"so I'm not sure how we ended up here.\n\n"
-				"This might be a bug, feel free to whinge/open a github issue.",
-				mode=ErrorMode.SCARY_WARNING
+			f"Note {note_name} is not in a deck."
+			"AnkiTunes only works with cards that are in a deck,"
+			"and I'm pretty sure Anki only lets you make cards if they're in a deck,"
+			"so I'm not sure how we ended up here.\n\n"
+			"This might be a bug, feel free to whinge/open a github issue.",
+			mode=ErrorMode.SCARY_WARNING
 		)
 
 	search = (
-			col.group_searches(
-					*[
-							join(
-									f'"Tune Type:* {tune_type}"',
-									'OR',
-									f'"Tune Type:{tune_type}"',
-							),
-							SearchNode(negated=SearchNode(nid=focus_card.nid)),
-							*([SearchNode(deck=deck['name'])] if deck is not None else []),
-					],
-					joiner='AND'
-			)
+		col.group_searches(
+		*[
+		join(
+		f'"Tune Type:* {tune_type}"',
+		'OR',
+		f'"Tune Type:{tune_type}"',
+		),
+		SearchNode(negated=SearchNode(nid=focus_card.nid)),
+		*([SearchNode(deck=deck['name'])] if deck is not None else []),
+		],
+		joiner='AND'
+		)
 	)
 	search_str = col.build_search_string(search)
 	print(f'searching for {search_str}')
@@ -133,12 +124,7 @@ def format_set_question(cards: Sequence[Card]) -> HTML:
 
 
 def on_card_will_show_qn(
-		q: str,
-		card: Card,
-		show_type: str,
-		/,
-		col: Optional[AnkiCollection] = None,
-		set_length: Optional[int] = None
+	q: str, card: Card, show_type: str, /, col: Optional[AnkiCollection] = None, set_length: Optional[int] = None
 ) -> HTML:
 	if not is_reviewing_tunes:
 		return HTML(q)
@@ -180,9 +166,7 @@ def get_set_from_base_card(focus_card: FocusCard) -> Sequence[Card]:
 
 def format_set_answers(cards: Sequence[Card]) -> HTML:
 	answerHtml = (card.answer() for card in cards)
-	replacedAnswerHtml = (
-			html.replace('__ABC_ID__', random_str()) for html in answerHtml
-	)
+	replacedAnswerHtml = (html.replace('__ABC_ID__', random_str()) for html in answerHtml)
 	return HTML('\n'.join(replacedAnswerHtml))
 
 
@@ -190,16 +174,12 @@ def update_answer_buttons(focus_card: Card) -> None:
 	note = focus_card.note()
 	Name = 'Name'
 	if Name not in note:
-		error(
-				f'`{Name}` field missing! This means update_answer_buttons was called with a non-ankitunes card. Bug!'
-		)
+		error(f'`{Name}` field missing! This means update_answer_buttons was called with a non-ankitunes card. Bug!')
 		return
 
 	name = note[Name]
 	html = f'<p>How hard was {name}?</p>'
-	mw().reviewer.bottom.web.eval(
-			f'ankitunes_add_answer_context({json.dumps(html)})'
-	)
+	mw().reviewer.bottom.web.eval(f'ankitunes_add_answer_context({json.dumps(html)})')
 	mw().reviewer.bottom.web.adjustHeightToFit()
 
 

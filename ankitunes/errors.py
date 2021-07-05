@@ -16,13 +16,11 @@ def error(msg: str, mode: Literal[ErrorMode.RAISE]) -> NoReturn:
 
 
 @overload
-def error(msg: str,
-					mode: ErrorMode = ErrorMode.SCARY_WARNING) -> Union[NoReturn, None]:
+def error(msg: str, mode: ErrorMode = ErrorMode.SCARY_WARNING) -> Union[NoReturn, None]:
 	...
 
 
-def error(msg: str,
-					mode: ErrorMode = ErrorMode.SCARY_WARNING) -> Union[NoReturn, None]:
+def error(msg: str, mode: ErrorMode = ErrorMode.SCARY_WARNING) -> Union[NoReturn, None]:
 	if os.environ.get('ANKITUNES_TESTING') == '1':
 		raise Exception(msg)
 

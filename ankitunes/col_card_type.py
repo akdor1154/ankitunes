@@ -19,8 +19,8 @@ question = '''
 
 def answer(addon_package: str) -> str:
 	return pyTemplate(
-			dedent(
-					'''
+		dedent(
+		'''
 		{{FrontSide}}
 
 		<hr id=answer>
@@ -39,7 +39,7 @@ def answer(addon_package: str) -> str:
 
 		{{/ABC}}
 	'''
-			)
+		)
 	).substitute(addon_package=addon_package)
 
 
@@ -51,9 +51,7 @@ class TemplateMigrator:
 
 	def build_template(self) -> AnkiTemplate:
 
-		addon_package = AddonManager.addonFromModule(
-				cast(AddonManager, None), __name__
-		)
+		addon_package = AddonManager.addonFromModule(cast(AddonManager, None), __name__)
 
 		t = self.mn.new_template(TEMPLATE_NAME)
 		t['qfmt'] = question
