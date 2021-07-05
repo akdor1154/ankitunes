@@ -98,7 +98,7 @@ def initialized_collection(empty_collection: AnkiCollection, mn: ModelManager) -
 
 def test_create_set(initialized_collection: ColAndStuff) -> None:
 	reviewer.is_reviewing_tunes = True
-	html = reviewer.on_card_will_show_qn('<html>Cooleys</html>', initialized_collection.cooleys, 'reviewQuestion', initialized_collection.col)
+	html = reviewer.on_card_will_show_qn('<html>Cooleys</html>', initialized_collection.cooleys, 'reviewQuestion', initialized_collection.col, 2)
 	assert 'Cooleys' in html
 	assert 'Cup of Tea' in html
 
@@ -108,7 +108,7 @@ def test_create_set(initialized_collection: ColAndStuff) -> None:
 
 
 def test_dont_crash_on_non_ankitunes_card(initialized_collection: ColAndStuff) -> None:
-	html = reviewer.on_card_will_show_qn('<html>Chao</html>', initialized_collection.some_other_note, 'reviewQuestion',  initialized_collection.col)
+	html = reviewer.on_card_will_show_qn('<html>Chao</html>', initialized_collection.some_other_note, 'reviewQuestion',  initialized_collection.col, 2)
 	assert 'Chao' in html
 	html = reviewer.on_card_will_show_ans('<html>Chao</html>', initialized_collection.some_other_note, 'reviewAnswer')
 	assert 'Chao' in html

@@ -12,6 +12,7 @@ import anki.collection
 import anki.sched
 import anki.schedv2
 
+import os
 import random
 import json
 from typing import *
@@ -46,7 +47,7 @@ def set_up_reviewer_bottom(web_content: aqt.webview.WebContent, context: Any) ->
 
 ## Question
 
-def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -> Sequence[Card]:
+def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection, set_length: int) -> Sequence[Card]:
 
 	focus_note = focus_card.note()
 
@@ -69,12 +70,6 @@ def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -
 	# readability
 	def join(a: Union[str, SearchNode], op: anki.collection.SearchJoiner, b: Union[str, SearchNode]) -> SearchNode:
 		return col.group_searches(a, b, joiner=op)
-
-	SET_NUM_TUNES = random.choices(
-		[1, 2, 3],
-		weights=[1, 3, 1],
-		k=1
-	)[0]
 
 	deck = col.decks.get(focus_card.did)
 	if deck is None:
@@ -103,7 +98,7 @@ def turn_card_into_set(focus_card: FocusCard, col: anki.collection.Collection) -
 	search_str = col.build_search_string(search)
 	print(f'searching for {search_str}')
 
-	search_limit = SET_NUM_TUNES - 1
+	search_limit = set_length - 1
 
 	other_ids = col.find_cards(
 		search_str,
@@ -127,7 +122,7 @@ def format_set_question(cards: Sequence[Card]) -> HTML:
 		'\n'.join(card.q() for card in cards)
 	)
 
-def on_card_will_show_qn(q: str, card: Card, show_type: str, /, col: Optional[AnkiCollection] = None) -> HTML:
+def on_card_will_show_qn(q: str, card: Card, show_type: str, /, col: Optional[AnkiCollection] = None, set_length: Optional[int] = None) -> HTML:
 	if not is_reviewing_tunes:
 		return HTML(q)
 	if show_type != 'reviewQuestion':
@@ -138,7 +133,19 @@ def on_card_will_show_qn(q: str, card: Card, show_type: str, /, col: Optional[An
 	# for testing..
 	col = col or mw().col
 
-	cards = turn_card_into_set(cast(FocusCard, card), col)
+	# also for testing..
+	# TODO: user accessible configuration?
+	if set_length is None:
+		if os.environ.get('ANKITUNES_TESTING') == '1':
+			set_length = 2
+		else:
+			set_length = random.choices(
+				[1, 2, 3],
+				weights=[1, 3, 1],
+				k=1
+			)[0]
+
+	cards = turn_card_into_set(cast(FocusCard, card), col, set_length)
 	newQ = format_set_question(cards)
 
 	return newQ

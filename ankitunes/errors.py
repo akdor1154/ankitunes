@@ -13,7 +13,7 @@ def error(msg: str, mode: Literal[ErrorMode.RAISE]) -> NoReturn: ...
 def error(msg: str, mode: ErrorMode = ErrorMode.SCARY_WARNING) -> Union[NoReturn, None]: ...
 
 def error(msg: str, mode: ErrorMode = ErrorMode.SCARY_WARNING) -> Union[NoReturn, None]:
-	if os.environ.get('ANKITUNES_HARD_MODE') not in (None, '0', ''):
+	if os.environ.get('ANKITUNES_TESTING') == '1':
 		raise Exception(msg)
 
 	from warnings import warn
