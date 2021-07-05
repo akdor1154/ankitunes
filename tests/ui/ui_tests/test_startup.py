@@ -16,6 +16,8 @@ import os
 from .. import wait_hook
 from .data import notes
 
+SHITTY_WAIT_MS = 200
+
 def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 	mw = aqt.mw
 	assert mw is not None
@@ -85,7 +87,7 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 	with qtbot.waitCallback() as cb:
 		mw.reviewer.web.evalWithCallback(";", cb)
 
-	qtbot.wait(100)
+	qtbot.wait(SHITTY_WAIT_MS)
 
 	# check both tunes are there
 	with qtbot.waitCallback() as cb:
@@ -110,7 +112,7 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 	with qtbot.waitCallback() as cb:
 		mw.reviewer.web.evalWithCallback(";", cb)
 
-	qtbot.wait(100)
+	qtbot.wait(SHITTY_WAIT_MS)
 
 	# check both tunes are there
 	with qtbot.waitCallback() as cb:
