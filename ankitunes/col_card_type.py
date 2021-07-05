@@ -10,15 +10,17 @@ import sys
 TEMPLATE_NAME = 'Tune'
 TPL_VER_KEY = 'ankitunes_tpl'
 
-
 question = '''
 <h1>{{Name}}</h1>
 
 <h2>{{Tune Type}}</h2>
 '''
 
+
 def answer(addon_package: str) -> str:
-	return pyTemplate(dedent('''
+	return pyTemplate(
+			dedent(
+					'''
 		{{FrontSide}}
 
 		<hr id=answer>
@@ -36,7 +38,10 @@ def answer(addon_package: str) -> str:
 		<script defer src="/_addons/${addon_package}/web/dist/card_template/template.js"></script>
 
 		{{/ABC}}
-	''')).substitute(addon_package=addon_package)
+	'''
+			)
+	).substitute(addon_package=addon_package)
+
 
 class TemplateMigrator:
 	mn: ModelManager
@@ -46,12 +51,12 @@ class TemplateMigrator:
 
 	def build_template(self) -> AnkiTemplate:
 
-		addon_package = AddonManager.addonFromModule(cast(AddonManager, None), __name__)
+		addon_package = AddonManager.addonFromModule(
+				cast(AddonManager, None), __name__
+		)
 
 		t = self.mn.new_template(TEMPLATE_NAME)
 		t['qfmt'] = question
 		t['afmt'] = answer(addon_package)
-		t['other'] = {
-			TPL_VER_KEY: True
-		} # type: ignore
+		t['other'] = {TPL_VER_KEY: True}  # type: ignore
 		return t

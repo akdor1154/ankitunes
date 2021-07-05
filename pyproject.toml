@@ -19,6 +19,7 @@ pytest = "^6.2.4"
 aqt = "^2.1.44"
 mypy = "^0.812"
 pytest-qt = "^4.0.0"
+yapf = "^0.31.0"
 
 [tool.poetry.extras]
 publish = ["requests", "mistune"]
@@ -26,3 +27,10 @@ publish = ["requests", "mistune"]
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.yapf]
+based_on_style = "yapf"
+continuation_align_style = "valign-right"
+use_tabs = true
+SPLIT_BEFORE_FIRST_ARGUMENT = true
+DEDENT_CLOSING_BRACKETS = true
