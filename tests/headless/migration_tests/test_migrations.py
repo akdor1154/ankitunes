@@ -10,7 +10,7 @@ import anki.cards
 from ankitunes.col_note_type import TNTMigrator
 from ankitunes.result import Result, Ok
 
-from ...data import cooleys, cup_of_tea, Note_v1
+from ankitunes.tunes.data import cooleys, cup_of_tea, Note_v1
 
 notes = [cooleys, cup_of_tea]
 

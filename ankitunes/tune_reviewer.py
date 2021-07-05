@@ -76,7 +76,9 @@ def turn_card_into_set(
 
 	# readability
 	def join(
-		a: Union[str, SearchNode], op: anki.collection.SearchJoiner, b: Union[str, SearchNode]
+		a: Union[str, SearchNode],
+		op: anki.collection.SearchJoiner,
+		b: Union[str, SearchNode],
 	) -> SearchNode:
 		return col.group_searches(a, b, joiner=op)
 

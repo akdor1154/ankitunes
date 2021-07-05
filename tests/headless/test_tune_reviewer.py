@@ -21,7 +21,7 @@ import ankitunes.col_note_type as NT
 import ankitunes.tune_reviewer as reviewer
 from ankitunes.result import Result, Ok, Err
 
-from ..data import cooleys, cup_of_tea
+from ankitunes.tunes.data import cooleys, cup_of_tea
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ class ColAndStuff:
 @pytest.fixture
 def initialized_collection(
 	empty_collection: AnkiCollection, mn: ModelManager
-) -> Generator[ColAndStuff, None, None]:
+) -> ColAndStuff:
 	col = empty_collection
 
 	m = NT.TNTMigrator(mn)

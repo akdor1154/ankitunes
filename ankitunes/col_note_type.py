@@ -5,6 +5,7 @@ import anki
 import re
 import functools
 
+from anki.collection import Collection as AnkiCollection
 from anki.models import NoteType, ModelManager
 from anki.notes import Note
 import aqt
@@ -98,7 +99,9 @@ class TNTMigrator:
 		self.mn = mn
 
 	@staticmethod
-	def _get_version(note_types: Sequence[NoteType]) -> Result[VersionResult, _VersionErr]:
+	def _get_version(
+		note_types: Sequence[NoteType],
+	) -> Result[VersionResult, _VersionErr]:
 		existing_nts = [nt for nt in note_types if nt.get("other", {}).get(NT_KEY) == True]
 		if len(existing_nts) > 1:
 			error(
@@ -213,7 +216,7 @@ class TNTMigrator:
 
 		self.mn.save(nt)
 
-	def setup_tune_note_type(self) -> None:
+	def setup_tune_note_type(self) -> NoteType:
 
 		# if not exist, create
 		# if exist, run migrations
@@ -245,15 +248,17 @@ class TNTMigrator:
 
 		self.migrate_template(nt)
 
+		return nt
+
 
 for ver in TNTVersion:
 	if _migrations.get(ver) is None:
 		raise Exception(f"missing migration for {ver}")
 
 
-def migrate() -> None:
-	mn = mw().col.models
-	TNTMigrator(mn).setup_tune_note_type()
+def migrate(col: AnkiCollection) -> NoteType:
+	mn = col.models
+	return TNTMigrator(mn).setup_tune_note_type()
 
 
 def is_ankitunes_nt(note_type: NoteType) -> bool:
@@ -265,5 +270,11 @@ def is_ankitunes_nt(note_type: NoteType) -> bool:
 		return False
 
 
+def _hook() -> None:
+	col = mw().col
+	migrate(col)
+	return None
+
+
 def setup() -> None:
-	aqt.gui_hooks.profile_did_open.append(migrate)
+	aqt.gui_hooks.profile_did_open.append(_hook)
