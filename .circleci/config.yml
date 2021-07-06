@@ -51,7 +51,7 @@ jobs:
 
       - run:
           name: Formatting check
-          command: poetry run yapf --parallel --recursive --diff --exclude ankitunes/web/node_modules/\* ankitunes tests
+          command: make lint-format
 
       - restore_cache:
           keys:
@@ -64,7 +64,7 @@ jobs:
 
       - run:
           name: mypy
-          command: poetry run mypy ankitunes
+          command: make lint-mypy
 
       - save_cache:
           key: >

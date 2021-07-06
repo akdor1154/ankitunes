@@ -10,7 +10,7 @@ from anki.notes import Note
 from .. import wait_hook
 
 
-@pytest.mark.fiddle('Interactive debugging only')
+@pytest.mark.fiddle("Interactive debugging only")
 def test_interactive(qtbot: QtBot, anki_running: aqt.AnkiApp) -> None:
 
 	mw = aqt.mw
@@ -38,7 +38,7 @@ def test_interactive(qtbot: QtBot, anki_running: aqt.AnkiApp) -> None:
 
 	assert nt is not None
 
-	deck_id = col.decks.id('Test Desk', create=True)
+	deck_id = col.decks.id("Test Desk", create=True)
 	assert deck_id is not None
 
 	for note_input in notes:

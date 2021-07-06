@@ -21,7 +21,7 @@ def error(msg: str, mode: ErrorMode = ErrorMode.SCARY_WARNING) -> Union[NoReturn
 
 
 def error(msg: str, mode: ErrorMode = ErrorMode.SCARY_WARNING) -> Union[NoReturn, None]:
-	if os.environ.get('ANKITUNES_TESTING') == '1':
+	if os.environ.get("ANKITUNES_TESTING") == "1":
 		raise Exception(msg)
 
 	from warnings import warn

@@ -25,7 +25,9 @@ from aqt.profiles import ProfileManager
 
 
 @contextmanager
-def temporary_user(dir_name, name="__Temporary Test User__", lang="en_US") -> Generator[str, None, None]:
+def temporary_user(
+	dir_name, name="__Temporary Test User__", lang="en_US"
+) -> Generator[str, None, None]:
 
 	# prevent popping up language selection dialog
 	original = ProfileManager.setDefaultLang
@@ -58,44 +60,47 @@ def temporary_user(dir_name, name="__Temporary Test User__", lang="en_US") -> Ge
 @contextmanager
 def temporary_dir() -> Generator[str, None, None]:
 	# create a true unique temporary directory at every startup
-	with tempfile.TemporaryDirectory(suffix='anki') as tempdir:
+	with tempfile.TemporaryDirectory(suffix="anki") as tempdir:
 		yield tempdir
 
 
 @pytest.fixture
 def ankiaddon_cmd(request):
-	return request.config.getoption('--ankiaddon')
+	return request.config.getoption("--ankiaddon")
 
 
 def _install_ankitunes_direct(profile_dir: str) -> None:
 	import importlib
-	ankitunesSpec = importlib.util.find_spec('ankitunes')
+
+	ankitunesSpec = importlib.util.find_spec("ankitunes")
 
 	ankitunes_dir = os.path.dirname(ankitunesSpec.origin)
 
 	assert os.path.exists(ankitunes_dir)
 
-	addons_dir = os.path.join(profile_dir, 'addons21')
+	addons_dir = os.path.join(profile_dir, "addons21")
 	os.makedirs(addons_dir, exist_ok=True)
 
-	ankitunes_addon_dir = os.path.join(addons_dir, 'ankitunes')
+	ankitunes_addon_dir = os.path.join(addons_dir, "ankitunes")
 	assert not os.path.exists(ankitunes_addon_dir)
 
 	os.symlink(src=ankitunes_dir, dst=ankitunes_addon_dir)
 
 
-def _install_ankitunes(argv: List[str], profile_dir: str, ankiaddon_path: str) -> List[str]:
+def _install_ankitunes(
+	argv: List[str], profile_dir: str, ankiaddon_path: str
+) -> List[str]:
 	d = os.path.dirname(__file__)
-	while not os.path.exists(os.path.join(d, 'pyproject.toml')):
+	while not os.path.exists(os.path.join(d, "pyproject.toml")):
 		oldD = d
 		d = os.path.dirname(d)
 		if d == oldD:
-			raise Exception('couldn\'t find project root')
+			raise Exception("couldn't find project root")
 
 	if ankiaddon_path is not None:
 
 		def installAddon(self: AnkiQt, path: str, startup: bool = False) -> None:
-			print('boo')
+			print("boo")
 			from aqt.addons import installAddonPackages
 
 			installAddonPackages(
@@ -118,48 +123,51 @@ def _install_ankitunes(argv: List[str], profile_dir: str, ankiaddon_path: str) -
 from typing import NamedTuple
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def fix_qt(*args, **kwargs) -> None:
-	if 'xvfb' not in os.environ.get('XAUTHORITY', ''):
+	if "xvfb" not in os.environ.get("XAUTHORITY", ""):
 		yield
 		return
 
-	if os.environ.get('XDG_SESSION_TYPE') == 'wayland':
-		print('overridding wayland session to run tests under xvfb')
-		os.environ['QT_QPA_PLATFORM'] = 'xcb'
+	if os.environ.get("XDG_SESSION_TYPE") == "wayland":
+		print("overridding wayland session to run tests under xvfb")
+		os.environ["QT_QPA_PLATFORM"] = "xcb"
 
 	with with_wm():
 		yield
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def qapp(fix_qt, qapp):
 	yield qapp
 
 
 def clean_hooks() -> None:
-	if 'anki.hooks' in sys.modules:
+	if "anki.hooks" in sys.modules:
 		import anki.hooks
+
 		for name, maybeHook in vars(anki.hooks).items():
-			if hasattr(maybeHook, '_hooks'):
+			if hasattr(maybeHook, "_hooks"):
 				maybeHook._hooks = []
-	if 'aqt.gui_hooks' in sys.modules:
+	if "aqt.gui_hooks" in sys.modules:
 		import aqt.gui_hooks
+
 		for name, maybeHook in vars(aqt.gui_hooks).items():
-			if hasattr(maybeHook, '_hooks'):
+			if hasattr(maybeHook, "_hooks"):
 				maybeHook._hooks = []
 
 	# delete ankitunes module - we need to re-import it to
 	# reload all its hooks if necessary.
-	if 'ankitunes' in sys.modules:
-		del sys.modules['ankitunes']
+	if "ankitunes" in sys.modules:
+		del sys.modules["ankitunes"]
 
 
 @contextmanager
 def with_wm():
 	import subprocess
 	import signal
-	wm = subprocess.Popen(['openbox'], encoding='utf-8')
+
+	wm = subprocess.Popen(["openbox"], encoding="utf-8")
 	yield
 	wm.send_signal(signal.SIGTERM)
 	wm.wait()
@@ -168,21 +176,23 @@ def with_wm():
 
 
 def screenshot(mw: AnkiQt):
-	#import subprocess
+	# import subprocess
 
-	os.makedirs('screenshots', exist_ok=True)
+	os.makedirs("screenshots", exist_ok=True)
 	import datetime
 	import itertools
-	file = os.path.join('screenshots', f'{datetime.datetime.now()}.png')
+
+	file = os.path.join("screenshots", f"{datetime.datetime.now()}.png")
 
 	screenshot = mw.screen().grabWindow(mw.winId())
 	img = screenshot.toImage()
-	img.save(file, 'png')
+	img.save(file, "png")
 
 
 @pytest.fixture
-def anki_running(qtbot: QtBot, ankiaddon_cmd: Optional[str],
-	install_ankitunes: bool = True) -> Generator[aqt.AnkiApp, None, None]:
+def anki_running(
+	qtbot: QtBot, ankiaddon_cmd: Optional[str], install_ankitunes: bool = True
+) -> Generator[aqt.AnkiApp, None, None]:
 
 	clean_hooks()
 
@@ -203,7 +213,7 @@ def anki_running(qtbot: QtBot, ankiaddon_cmd: Optional[str],
 			argv = ["anki", "-p", user_name, "-b", dir_name]
 			argv = _install_ankitunes(argv, dir_name, ankiaddon_cmd)
 
-			print(f'running anki with argv={argv}')
+			print(f"running anki with argv={argv}")
 			app = _run(argv=argv, exec=False)
 			assert app is not None
 			try:
@@ -216,10 +226,12 @@ def anki_running(qtbot: QtBot, ankiaddon_cmd: Optional[str],
 
 	# remove hooks added during app initialization
 	from anki import hooks
+
 	hooks._hooks = {}
 
 	# test_nextIvl will fail on some systems if the locales are not restored
 	import locale
+
 	locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())
 
 
@@ -227,11 +239,11 @@ import argparse
 
 
 def pytest_runtest_setup(item):
-	fiddle_marks = list(item.iter_markers(name='fiddle'))
-	is_fiddle = (len(fiddle_marks) > 0)
-	if item.config.getoption('--fiddle'):
+	fiddle_marks = list(item.iter_markers(name="fiddle"))
+	is_fiddle = len(fiddle_marks) > 0
+	if item.config.getoption("--fiddle"):
 		if not is_fiddle:
-			pytest.skip('Fiddles only')
+			pytest.skip("Fiddles only")
 	else:
 		if is_fiddle:
-			pytest.skip('Disabling fiddles')
+			pytest.skip("Disabling fiddles")

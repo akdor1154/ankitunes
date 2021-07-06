@@ -17,7 +17,7 @@ notes = [cooleys, cup_of_tea]
 
 def test_migration_data_integrity(empty_collection: ACollection) -> None:
 	col = empty_collection
-	deck_id = col.decks.id('Test Deck', create=True)
+	deck_id = col.decks.id("Test Deck", create=True)
 	assert deck_id is not None
 	mn = ModelManager(col)
 	migrator = TNTMigrator(mn)
@@ -53,28 +53,32 @@ def test_migration_data_integrity(empty_collection: ACollection) -> None:
 	migrator.setup_tune_note_type()
 
 	# save
-	nt = col.models.byName('AnkiTune')
+	nt = col.models.byName("AnkiTune")
 	col.save()
 
 	# retrieve
-	nt = col.models.byName('AnkiTune')
+	nt = col.models.byName("AnkiTune")
 	assert nt is not None
 
-	retrieved_note_ids = col.find_notes(SearchNode(note='AnkiTune'))
-	assert len(retrieved_note_ids) == len(notes), 'Missing notes!'
+	retrieved_note_ids = col.find_notes(SearchNode(note="AnkiTune"))
+	assert len(retrieved_note_ids) == len(notes), "Missing notes!"
 
-	card_ids = [card_id for note_id in retrieved_note_ids for card_id in col.card_ids_of_note(note_id)]
-	assert len(card_ids) == len(notes) * len(nt['tmpls']), 'Missing cards!'
+	card_ids = [
+		card_id for note_id in retrieved_note_ids for card_id in col.card_ids_of_note(note_id)
+	]
+	assert len(card_ids) == len(notes) * len(nt["tmpls"]), "Missing cards!"
 
 	retrieved_notes = [col.getNote(note_id) for note_id in retrieved_note_ids]
 	cards = [col.getCard(card_id) for card_id in card_ids]
 
 	for originalNote in notes:
 		retrievedNote = next(
-			n for n in retrieved_notes if all(n[field] == fieldValue for field, fieldValue in originalNote.items())
+			n
+			for n in retrieved_notes
+			if all(n[field] == fieldValue for field, fieldValue in originalNote.items())
 		)
 		assert retrievedNote is not None
 		assert retrievedNote.model() == nt
 
 	for card in cards:
-		assert card.ord == nt['tmpls'][0]['ord']
+		assert card.ord == nt["tmpls"][0]["ord"]

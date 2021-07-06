@@ -26,3 +26,20 @@ dist/ankitunes.ankiaddon: typescript
 	cd dist/addon; unzip ../ankitunes-*.whl
 	cp ankiweb_manifest.json dist/addon/ankitunes/manifest.json
 	cd dist/addon/ankitunes; zip -r ../../ankitunes.ankiaddon *
+
+
+# dev scripts
+.PHONY: format
+format:
+	poetry run tan ankitunes tests
+
+.PHONY: lint-format
+lint-format:
+	poetry run tan --check --diff ankitunes tests
+
+.PHONY: lint-mypy
+lint-mypy:
+	poetry run mypy ankitunes
+
+.PHONY: lint
+lint: lint-format lint-mypy

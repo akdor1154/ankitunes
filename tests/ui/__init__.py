@@ -2,7 +2,7 @@ from pytestqt.qtbot import QtBot
 from contextlib import contextmanager
 from typing import *
 
-H = TypeVar('H')
+H = TypeVar("H")
 
 
 class AnkiHook(Protocol[H]):

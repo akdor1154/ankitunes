@@ -10,7 +10,7 @@ from typing import *
 
 import anki.collection
 
-os.environ['ANKITUNES_TESTING'] = '1'  # warnings are now exceptions
+os.environ["ANKITUNES_TESTING"] = "1"  # warnings are now exceptions
 
 _masterFilePath: Optional[str] = None
 
@@ -18,7 +18,7 @@ _masterFilePath: Optional[str] = None
 def _getMasterFilePath() -> str:
 	global _masterFilePath
 	if _masterFilePath is None:
-		with tempfile.NamedTemporaryFile(suffix='.anki2', delete=True) as tf:
+		with tempfile.NamedTemporaryFile(suffix=".anki2", delete=True) as tf:
 			pass
 		_masterFilePath = tf.name
 
@@ -27,7 +27,7 @@ def _getMasterFilePath() -> str:
 
 		def cleanup() -> None:
 			if _masterFilePath is None:
-				raise Exception('cleaned up empty _masterFilePath')
+				raise Exception("cleaned up empty _masterFilePath")
 			os.unlink(_masterFilePath)
 
 		atexit.register(cleanup)
@@ -39,7 +39,7 @@ def _getMasterFilePath() -> str:
 # copies from the master.
 @pytest.fixture
 def empty_collection() -> Generator[anki.collection.Collection, None, None]:
-	with tempfile.NamedTemporaryFile(suffix='.anki2', delete=False) as tf:
+	with tempfile.NamedTemporaryFile(suffix=".anki2", delete=False) as tf:
 		shutil.copy(_getMasterFilePath(), tf.name)
 	col = anki.collection.Collection(tf.name)
 	yield col
@@ -48,6 +48,6 @@ def empty_collection() -> Generator[anki.collection.Collection, None, None]:
 
 
 def pytest_addoption(parser):
-	parser.addoption('--fiddle', action='store_true')
+	parser.addoption("--fiddle", action="store_true")
 
-	parser.addoption('--ankiaddon', action='store')
+	parser.addoption("--ankiaddon", action="store")

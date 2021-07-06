@@ -28,12 +28,12 @@ def test_get_version_empty(mn: ModelManager) -> None:
 
 
 # Will need to change if becomes configurable
-TNT_NAME = 'AnkiTune'
+TNT_NAME = "AnkiTune"
 
 
 @contextlib.contextmanager
 def setupNoteType(mn: ModelManager) -> Generator[NoteType, None, None]:
-	basic = mn.byName('Basic')
+	basic = mn.byName("Basic")
 	assert basic is not None
 	nt = mn.copy(basic)
 	yield nt
@@ -44,7 +44,7 @@ def test_get_version_exist_unmanaged_1(mn: ModelManager) -> None:
 	m = NT.TNTMigrator(mn)
 
 	with setupNoteType(mn) as nt:
-		nt['name'] = TNT_NAME
+		nt["name"] = TNT_NAME
 
 	vers = m.get_current_version()
 	assert vers == Ok((NT.FakeVersion.NotExist, None))
@@ -57,8 +57,8 @@ def test_get_version_exist_unmanaged_2(mn: ModelManager) -> None:
 	m = NT.TNTMigrator(mn)
 
 	with setupNoteType(mn) as nt:
-		nt['name'] = TNT_NAME
-		nt['other'] = {'something': 'or other'}
+		nt["name"] = TNT_NAME
+		nt["other"] = {"something": "or other"}
 
 	vers = m.get_current_version()
 	assert vers == Ok((NT.FakeVersion.NotExist, None))
@@ -71,10 +71,10 @@ def test_get_version_exist_unknown(mn: ModelManager) -> None:
 	m = NT.TNTMigrator(mn)
 
 	with setupNoteType(mn) as nt:
-		nt['name'] = TNT_NAME
-		nt['other'] = nt.get('other', {})
-		nt['other']['ankitunes_nt'] = True
-		nt['other']['ankitunes_nt_version'] = 66
+		nt["name"] = TNT_NAME
+		nt["other"] = nt.get("other", {})
+		nt["other"]["ankitunes_nt"] = True
+		nt["other"]["ankitunes_nt_version"] = 66
 
 	vers = m.get_current_version()
 	assert vers == Err(NT.VersionErr.ExistsUnknown(66))
@@ -84,10 +84,10 @@ def test_get_version_exist_known(mn: ModelManager) -> None:
 	m = NT.TNTMigrator(mn)
 
 	with setupNoteType(mn) as nt:
-		nt['name'] = TNT_NAME
-		nt['other'] = nt.get('other', {})
-		nt['other']['ankitunes_nt'] = True
-		nt['other']['ankitunes_nt_version'] = 1
+		nt["name"] = TNT_NAME
+		nt["other"] = nt.get("other", {})
+		nt["other"]["ankitunes_nt"] = True
+		nt["other"]["ankitunes_nt_version"] = 1
 
 	vers = m.get_current_version()
 	assert vers == Ok((NT.TNTVersion.V1, nt))
@@ -101,7 +101,7 @@ def test_migrate_version(mn: ModelManager, version: NT.TNTVersion) -> None:
 	current_version = 0
 	for current_version in range(version):
 		next_version = current_version + 1
-		migrator = getattr(m, f'migrate_v{current_version}_to_v{next_version}')
+		migrator = getattr(m, f"migrate_v{current_version}_to_v{next_version}")
 		_nt = migrator(_nt).unwrap()
 		mn.save(cast(NoteType, _nt))
 
@@ -119,13 +119,13 @@ def test_migrate(mn: ModelManager) -> None:
 	assert m.get_current_version() == Ok((NT.TNTVersion.V1, nt))
 
 	assert nt is not None
-	assert len(nt['tmpls']) == 1
+	assert len(nt["tmpls"]) == 1
 
 
 def test_is_ankitunes_version(mn: ModelManager) -> None:
 
-	nt = mn.new('is ankitunes')
-	nt['other'] = {'ankitunes_nt': True, 'ankitunes_nt_version': 1}
+	nt = mn.new("is ankitunes")
+	nt["other"] = {"ankitunes_nt": True, "ankitunes_nt_version": 1}
 
 	assert NT.is_ankitunes_nt(nt) is True
 

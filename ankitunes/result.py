@@ -1,7 +1,7 @@
 from typing import *
 
-T = TypeVar('T')
-E = TypeVar('E')
+T = TypeVar("T")
+E = TypeVar("E")
 
 
 class Ok(Generic[T]):
@@ -20,7 +20,7 @@ class Ok(Generic[T]):
 		return bool(self.value == other.value)
 
 	def __repr__(self) -> str:
-		return f'Ok({repr(self.value)})'
+		return f"Ok({repr(self.value)})"
 
 
 class Err(Generic[E]):
@@ -30,7 +30,7 @@ class Err(Generic[E]):
 		self.err_value = val
 
 	def unwrap(self) -> T:
-		raise Exception(f'Tried to unwrap an error with value {repr(self.err_value)}!')
+		raise Exception(f"Tried to unwrap an error with value {repr(self.err_value)}!")
 
 	def __eq__(self, other: Any) -> bool:
 		if not isinstance(other, Err):
@@ -39,7 +39,7 @@ class Err(Generic[E]):
 		return bool(self.err_value == other.err_value)
 
 	def __repr__(self) -> str:
-		return f'Ok({repr(self.err_value)})'
+		return f"Ok({repr(self.err_value)})"
 
 
 Result = Union[Ok[T], Err[E]]
