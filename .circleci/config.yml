@@ -204,7 +204,10 @@ workflows:
             parameters:
               #python_docker_tag: ["3.8", "3.9"]
               python_docker_tag: ["3.8", "3.9"]
-              anki_version: ["2.1.41", "2.1.42", "latest"]
+              anki_version: ["2.1.41", "latest"]
+            exclude:
+              - python_docker_tag: "3.8"
+                anki_version: "2.1.41"
           filters:
             tags:
               only: /^v\d+\.\d+\.\d+.*$/
