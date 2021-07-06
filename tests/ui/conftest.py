@@ -26,7 +26,7 @@ from aqt.profiles import ProfileManager
 
 @contextmanager
 def temporary_user(
-	dir_name, name="__Temporary Test User__", lang="en_US"
+	dir_name: str, name: str = "__Temporary Test User__", lang: str = "en_US"
 ) -> Generator[str, None, None]:
 
 	# prevent popping up language selection dialog
@@ -35,7 +35,7 @@ def temporary_user(
 	def set_default_lang(self: ProfileManager, idx: int) -> None:
 		self.setLang(lang)
 
-	ProfileManager.setDefaultLang = set_default_lang
+	ProfileManager.setDefaultLang = set_default_lang  # type: ignore
 
 	pm = ProfileManager(base=dir_name)
 
@@ -54,7 +54,7 @@ def temporary_user(
 	finally:
 		# cleanup
 		pm.remove(name)
-		ProfileManager.setDefaultLang = original
+		ProfileManager.setDefaultLang = original  # type: ignore
 
 
 @contextmanager
@@ -65,7 +65,7 @@ def temporary_dir() -> Generator[str, None, None]:
 
 
 @pytest.fixture
-def ankiaddon_cmd(request):
+def ankiaddon_cmd(request: pytest.FixtureRequest) -> Any:
 	return request.config.getoption("--ankiaddon")
 
 
@@ -73,6 +73,8 @@ def _install_ankitunes_direct(profile_dir: str) -> None:
 	import importlib
 
 	ankitunesSpec = importlib.util.find_spec("ankitunes")
+	assert ankitunesSpec is not None
+	assert ankitunesSpec.origin is not None
 
 	ankitunes_dir = os.path.dirname(ankitunesSpec.origin)
 
@@ -88,7 +90,7 @@ def _install_ankitunes_direct(profile_dir: str) -> None:
 
 
 def _install_ankitunes(
-	argv: List[str], profile_dir: str, ankiaddon_path: str
+	argv: List[str], profile_dir: str, ankiaddon_path: Optional[str]
 ) -> List[str]:
 	d = os.path.dirname(__file__)
 	while not os.path.exists(os.path.join(d, "pyproject.toml")):
@@ -112,7 +114,7 @@ def _install_ankitunes(
 				parent=None if startup else self,
 			)
 
-		AnkiQt.installAddon = installAddon
+		AnkiQt.installAddon = installAddon  # type: ignore
 
 		return argv + [ankiaddon_path]
 	else:
@@ -124,7 +126,7 @@ from typing import NamedTuple
 
 
 @pytest.fixture(scope="session")
-def fix_qt(*args, **kwargs) -> None:
+def fix_qt() -> Generator[None, None, None]:
 	if "xvfb" not in os.environ.get("XAUTHORITY", ""):
 		yield
 		return
@@ -138,7 +140,7 @@ def fix_qt(*args, **kwargs) -> None:
 
 
 @pytest.fixture(scope="session")
-def qapp(fix_qt, qapp):
+def qapp(fix_qt: Any, qapp: Any) -> Generator[Any, None, None]:
 	yield qapp
 
 
@@ -163,7 +165,7 @@ def clean_hooks() -> None:
 
 
 @contextmanager
-def with_wm():
+def with_wm() -> Generator[None, None, None]:
 	import subprocess
 	import signal
 
@@ -175,7 +177,7 @@ def with_wm():
 		raise subprocess.CalledProcessError(wm.returncode, wm.args)
 
 
-def screenshot(mw: AnkiQt):
+def screenshot(mw: AnkiQt) -> None:
 	# import subprocess
 
 	os.makedirs("screenshots", exist_ok=True)
@@ -204,7 +206,7 @@ def anki_running(
 	def mock_secondInstance(self: AnkiApp) -> bool:
 		return False
 
-	AnkiApp.secondInstance = mock_secondInstance
+	AnkiApp.secondInstance = mock_secondInstance  # type: ignore
 
 	# we need a new user for the test
 	with temporary_dir() as dir_name:
@@ -216,6 +218,7 @@ def anki_running(
 			print(f"running anki with argv={argv}")
 			app = _run(argv=argv, exec=False)
 			assert app is not None
+			assert aqt.mw is not None
 			try:
 				qtbot.addWidget(aqt.mw)
 				yield app
@@ -232,13 +235,13 @@ def anki_running(
 	# test_nextIvl will fail on some systems if the locales are not restored
 	import locale
 
-	locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())
+	locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())  # type: ignore
 
 
 import argparse
 
 
-def pytest_runtest_setup(item):
+def pytest_runtest_setup(item: pytest.Item) -> None:
 	fiddle_marks = list(item.iter_markers(name="fiddle"))
 	is_fiddle = len(fiddle_marks) > 0
 	if item.config.getoption("--fiddle"):

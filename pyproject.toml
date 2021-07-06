@@ -17,7 +17,7 @@ mistune = {version = "2.0.0-rc1", optional = true, extras = ["publish"]}
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
 aqt = "^2.1.44"
-mypy = "^0.812"
+mypy = "^0.910"
 pytest-qt = "^4.0.0"
 tan = "^20.8.4"
 
@@ -31,3 +31,24 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 target-version=['py38']
 use-tabs=true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+files = ["ankitunes","tests"]
+exclude = "ankitunes/web/node_modules/.*"
+
+[[tool.mypy.overrides]]
+module = [
+	"aqt.gui_hooks",
+	"anki.hooks"
+]
+implicit_reexport = true
+
+[[tool.mypy.overrides]]
+module = [
+	"pytestqt.*"
+]
+ignore_missing_imports = true

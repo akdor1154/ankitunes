@@ -55,7 +55,7 @@ class ColAndStuff:
 @pytest.fixture
 def initialized_collection(
 	empty_collection: AnkiCollection, mn: ModelManager
-) -> ColAndStuff:
+) -> Generator[ColAndStuff, None, None]:
 	col = empty_collection
 
 	m = NT.TNTMigrator(mn)

@@ -43,3 +43,7 @@ lint-mypy:
 
 .PHONY: lint
 lint: lint-format lint-mypy
+
+.PHONY: test
+test:
+	poetry run pytest

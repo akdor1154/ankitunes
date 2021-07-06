@@ -44,7 +44,7 @@ def test_interactive(qtbot: QtBot, anki_running: aqt.AnkiApp) -> None:
 	for note_input in notes:
 		n = Note(col, nt)
 		for field, val in note_input.items():
-			n[field] = val
+			n[field] = val  # type: ignore
 		col.add_note(n, deck_id)
 
 	col.save()

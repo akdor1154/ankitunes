@@ -47,7 +47,10 @@ def empty_collection() -> Generator[anki.collection.Collection, None, None]:
 	os.unlink(col.path)
 
 
-def pytest_addoption(parser):
+import _pytest.config.argparsing
+
+
+def pytest_addoption(parser: _pytest.config.argparsing.Parser) -> None:
 	parser.addoption("--fiddle", action="store_true")
 
 	parser.addoption("--ankiaddon", action="store")

@@ -48,7 +48,7 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 	for note_input in notes:
 		n = Note(col, nt)
 		for field, val in note_input.items():
-			n[field] = val
+			n[field] = val  # type: ignore
 		col.add_note(n, deck_id)
 
 	col.save()
@@ -59,7 +59,7 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 
 	# move to deck overview and wait
 	with wait_hook(qtbot, aqt.gui_hooks.overview_did_refresh):
-		mw.deckBrowser._selDeck(deck_id)
+		mw.deckBrowser._selDeck(str(deck_id))
 
 	# wait for overview web to render
 	with qtbot.waitCallback() as cb:
@@ -124,7 +124,7 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 
 	# check sheet music is there - find a <title> in <svg> with the tune title.
 	# tuneName needs to match title in ABC, not title in anki note field.
-	def checkForTitleJs(tuneName: str):
+	def checkForTitleJs(tuneName: str) -> str:
 		return f"""
 			var elems = Array.from(document.querySelectorAll('svg title'));
 			var matching = (
