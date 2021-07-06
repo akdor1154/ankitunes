@@ -1,7 +1,7 @@
 from typing import *
 
-T = TypeVar("T")
-E = TypeVar("E")
+T = TypeVar("T", covariant=True)
+E = TypeVar("E", covariant=True)
 
 
 class Ok(Generic[T]):
