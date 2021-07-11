@@ -270,6 +270,11 @@ def is_ankitunes_nt(note_type: NoteType) -> bool:
 		return False
 
 
+def get_ankitunes_nt(mn: Optional[ModelManager] = None) -> NoteType:
+	mn = mn or mw().col.models
+	return TNTMigrator(mn).setup_tune_note_type()
+
+
 def _hook() -> None:
 	col = mw().col
 	migrate(col)

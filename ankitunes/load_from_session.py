@@ -7,14 +7,16 @@ from dataclasses import dataclass
 import urllib.request
 import json
 import random
+import warnings
 
 
 @dataclass
-class GrabResult:
+class GrabbedTune:
 	name: str
 	key: str
 	type: str
 	abc: str
+	uri: str
 
 
 class GrabError:
@@ -75,6 +77,8 @@ _GrabError = Union[
 	GrabError.NoSuchSetting,
 ]
 
+GrabResult = Result[GrabbedTune, _GrabError]
+
 PATH_REGEX = re.compile(r"/tunes/(\d+)/?")
 FRAGMENT_REGEX = re.compile(r"setting(\d+)")
 
@@ -82,7 +86,6 @@ FRAGMENT_REGEX = re.compile(r"setting(\d+)")
 def _parse_thesession_url(
 	url: str,
 ) -> Result[Tuple[int, Optional[int]], GrabError.BadUrl]:
-	"Takes a url like https://thesession.org/tunes/2#setting2 and returns the result as a Note."
 
 	try:
 		parsed = urllib.parse.urlsplit(url)
@@ -104,12 +107,12 @@ def _parse_thesession_url(
 		parsed_fragment = FRAGMENT_REGEX.match(parsed.fragment)
 		if parsed_fragment is None:
 			return Err(GrabError.BadUrl(url))
-		setting_id = int(parsed_fragment[1]) - 1
+		setting_id = int(parsed_fragment[1])
 
 	return Ok((tune_id, setting_id))
 
 
-def get_from_thesession(url: str) -> Result[GrabResult, _GrabError]:
+def get_from_thesession(url: str) -> Result[GrabbedTune, _GrabError]:
 	"Takes a url like https://thesession.org/tunes/2#setting2 and returns the result as a Note."
 
 	parse_result = _parse_thesession_url(url)
@@ -123,7 +126,7 @@ def get_from_thesession(url: str) -> Result[GrabResult, _GrabError]:
 
 def _get_from_thesession(
 	tune_id: int, setting_id: Optional[int]
-) -> Result[GrabResult, _GrabError]:
+) -> Result[GrabbedTune, _GrabError]:
 	tune_result = _retrieve_thesession_tune(tune_id)
 
 	if isinstance(tune_result, Err):
@@ -132,14 +135,21 @@ def _get_from_thesession(
 	tune = tune_result.value
 
 	if setting_id is None:
-		setting_id = random.choice([i for (i, _s) in enumerate(tune.settings)])
+		i, setting = random.choice(list(enumerate(tune.settings)))
+	else:
+		try:
+			i, setting = next(
+				(i, s) for (i, s) in enumerate(tune.settings) if s.id == setting_id
+			)
+		except StopIteration:
+			return Err(GrabError.NoSuchSetting(tune, setting_id))
 
-	try:
-		setting = tune.settings[setting_id]
-	except IndexError:
-		return Err(GrabError.NoSuchSetting(tune, setting_id))
+	uri = f"https://thesession.org/tunes/{tune.id}#setting{setting.id}"
+	abc = _process_sessionapi_abc(tune, setting, i)
 
-	return Ok(GrabResult(name=tune.name, key=setting.key, type=tune.type, abc=setting.abc))
+	return Ok(
+		GrabbedTune(name=tune.name, key=setting.key, type=tune.type, abc=abc, uri=uri)
+	)
 
 
 @dataclass
@@ -150,6 +160,7 @@ class TheSessionTune:
 
 	@dataclass
 	class Setting:
+		id: int
 		key: str
 		abc: str
 
@@ -187,7 +198,9 @@ def _retrieve_thesession_tune(tune_id: int) -> Result[TheSessionTune, _GrabError
 			type=assert_str(tune_json["type"]),
 			settings=[
 				TheSessionTune.Setting(
-					key=assert_str(setting_json["key"]), abc=assert_str(setting_json["abc"])
+					id=assert_int(setting_json["id"]),
+					key=assert_str(setting_json["key"]),
+					abc=assert_str(setting_json["abc"]),
 				)
 				for setting_json in tune_json["settings"]
 			],
@@ -196,3 +209,49 @@ def _retrieve_thesession_tune(tune_id: int) -> Result[TheSessionTune, _GrabError
 		return Err(GrabError.APISpecError(url, tune_json, e))
 
 	return Ok(tune)
+
+
+def _process_sessionapi_abc(
+	tune: TheSessionTune, setting: TheSessionTune.Setting, setting_index: int
+) -> str:
+	timeSig = _getTimeSignature(tune.type)
+	timeSigABC = f"\nM: {timeSig}" if timeSig is not None else ""
+	NL = "\n"
+	return f"""\
+X: {setting_index+1}
+T: {tune.name}
+R: {tune.type}{timeSigABC}
+L: 1/8
+K: {setting.key}
+{setting.abc.replace('!', NL)}
+"""
+
+
+def _getTimeSignature(tuneType: str) -> Optional[str]:
+	if tuneType == "reel":
+		return "4/4"
+	elif tuneType == "jig":
+		return "6/8"
+	elif tuneType == "slip jig":
+		return "9/8"
+	elif tuneType == "hornpipe":
+		return "4/4"
+	elif tuneType == "polka":
+		return "2/4"
+	elif tuneType == "slide":
+		return "12/8"
+	elif tuneType == "waltz":
+		return "3/4"
+	elif tuneType == "barndance":
+		return "4/4"
+	elif tuneType == "strathspey":
+		return "4/4"
+	elif tuneType == "three-two":
+		return "3/2"
+	elif tuneType == "mazurka":
+		return "3/4"
+	elif tuneType == "march":
+		return "4/4"
+	else:
+		warnings.warn(f"Unknown tune type {tuneType}! Please raise a bug!")
+		return None

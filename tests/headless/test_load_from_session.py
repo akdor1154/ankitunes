@@ -1,10 +1,11 @@
 import ankitunes
-from ankitunes.load_from_session import get_from_thesession, GrabError, GrabResult
+from ankitunes.load_from_session import get_from_thesession, GrabError, GrabbedTune
 from typing import *
 import unittest.mock
 import urllib.request
 from ankitunes.result import Result, Ok, Err
 from contextlib import contextmanager
+from textwrap import dedent
 
 
 @contextmanager
@@ -27,7 +28,7 @@ def mock_urlopen(
 
 def test_successful_load() -> None:
 	with mock_urlopen(
-		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"abc": "abc", "key": "Cmajor"}]}'
+		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"id": 2, "abc": "abc", "key": "Cmajor"}]}'
 	):
 		result = get_from_thesession("https://thesession.org/tunes/1")
 	assert isinstance(result, Ok), f"{result.err_value.msg}"
@@ -37,9 +38,9 @@ def test_successful_load() -> None:
 
 def test_successful_load_setting() -> None:
 	with mock_urlopen(
-		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"abc": "abc", "key": "Cmajor"}]}'
+		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"id": 2, "abc": "abc", "key": "Cmajor"}]}'
 	):
-		result = get_from_thesession("https://thesession.org/tunes/1#setting1")
+		result = get_from_thesession("https://thesession.org/tunes/1#setting2")
 	assert isinstance(result, Ok), f"{result.err_value.msg}"
 	tune = result.value
 	assert tune.name == "Some Tune"
@@ -47,7 +48,7 @@ def test_successful_load_setting() -> None:
 
 def test_bad_uri() -> None:
 	with mock_urlopen(
-		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"abc": "abc", "key": "Cmajor"}]}'
+		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"id": 2, "abc": "abc", "key": "Cmajor"}]}'
 	):
 		result = get_from_thesession("https:\\thesession.org/tunes/1")
 	assert isinstance(result, Err)
@@ -57,7 +58,7 @@ def test_bad_uri() -> None:
 
 def test_bad_domain() -> None:
 	with mock_urlopen(
-		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"abc": "abc", "key": "Cmajor"}]}'
+		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"id", 2, "abc": "abc", "key": "Cmajor"}]}'
 	):
 		result = get_from_thesession("https://thesession.borg/tunes/1")
 	assert isinstance(result, Err)
@@ -67,7 +68,7 @@ def test_bad_domain() -> None:
 
 def test_bad_path() -> None:
 	with mock_urlopen(
-		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"abc": "abc", "key": "Cmajor"}]}'
+		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"id": 2, "abc": "abc", "key": "Cmajor"}]}'
 	):
 		result = get_from_thesession("https://thesession.org/tunes/abc")
 	assert isinstance(result, Err)
@@ -77,7 +78,7 @@ def test_bad_path() -> None:
 
 def test_bad_setting() -> None:
 	with mock_urlopen(
-		'{"id": 0, "name":"Some Tune", "type": "reel", "settings": [{"abc": "abc", "key": "Cmajor"}]}'
+		'{"id": 0, "name":"Some Tune", "type": "reel", "settings": [{"id": 2, "abc": "abc", "key": "Cmajor"}]}'
 	):
 		result = get_from_thesession("https://thesession.org/tunes/1#set")
 	assert isinstance(result, Err)
@@ -112,24 +113,37 @@ def test_api_bad() -> None:
 
 def test_no_setting() -> None:
 	with mock_urlopen(
-		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"abc": "abc", "key": "Cmajor"}]}'
+		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"id": 2, "abc": "abc", "key": "Cmajor"}]}'
 	):
-		result = get_from_thesession("https://thesession.org/tunes/1#setting2")
+		result = get_from_thesession("https://thesession.org/tunes/1#setting333")
 	assert isinstance(result, Err)
 	val = result.err_value
 	assert isinstance(val, GrabError.NoSuchSetting)
 
 
 def test_real_cooleys() -> None:
-	result = get_from_thesession("https://thesession.org/tunes/1#setting2")
+	result = get_from_thesession("https://thesession.org/tunes/1#setting12342")
 	assert isinstance(result, Ok)
 	tune = result.value
-	assert tune == GrabResult(
+	assert tune == GrabbedTune(
 		name="Cooley's",
 		key="Eminor",
 		type="reel",
+		uri="https://thesession.org/tunes/1#setting12342",
 		abc=(
-			"|:F|CGGC G2 CG|G2 FG BGFE|(3DCB, FB, GB,FB,|DB,DF BFDB,|! CGGC G2 CG|G2 FG Bcde|fdcd BGFB|B,CDF C3:|! "
-			"|:d|cG ~G2 cede| cG ~G2 ecBG|(3FGF DF B,FDF|GFDF Bcde|! cG ~G2 cede| cG ~G2 Bcde| fdcd BGFB| B,CDF C3:|"
+			dedent(
+				"""\
+				X: 2
+				T: Cooley's
+				R: reel
+				M: 4/4
+				L: 1/8
+				K: Eminor
+				|:F|CGGC G2 CG|G2 FG BGFE|(3DCB, FB, GB,FB,|DB,DF BFDB,|
+				 CGGC G2 CG|G2 FG Bcde|fdcd BGFB|B,CDF C3:|
+				 |:d|cG ~G2 cede| cG ~G2 ecBG|(3FGF DF B,FDF|GFDF Bcde|
+				 cG ~G2 cede| cG ~G2 Bcde| fdcd BGFB| B,CDF C3:|
+				"""
+			)
 		),
 	)
