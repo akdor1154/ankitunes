@@ -116,6 +116,10 @@ def onboard(col: AnkiCollection) -> None:
 	# else add some cards
 	setup_cards(col, deck_id)
 
+	# and set it as the default
+	col.decks.select(deck_id)
+	col.save()
+
 
 def _hook() -> None:
 	col = mw().col

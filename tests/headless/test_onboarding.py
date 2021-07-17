@@ -22,6 +22,9 @@ def test_empty_profile(empty_collection: AnkiCollection) -> None:
 	cup_of_tea = next(n for n in notes if n["Name"] == "The Cup of Tea")
 	assert cup_of_tea is not None
 
+	current_deck_id = col.decks.selected()
+	assert current_deck_id == deck["id"]
+
 
 def test_profile_with_deck_and_cards(empty_collection: AnkiCollection) -> None:
 	"on a profile with an existing deck with some cards, check no cards get created"
