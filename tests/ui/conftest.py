@@ -1,30 +1,26 @@
 # https://github.com/krassowski/anki_testing/blob/master/anki_testing.py
 
-# coding: utf-8
-from argparse import Namespace
-from posix import environ
-import shutil
 import tempfile
 from contextlib import contextmanager
 from typing import *
-
 import os
 import os.path
-
 import sys
-from PyQt5.QtCore import QThread
-from _pytest.config import apply_warning_filters, Config as PytestConfig
-import anki
-import anki.collection
-import aqt.addons
-from warnings import warn
-from aqt.main import AnkiQt
 
 import pytest
+from _pytest.config import apply_warning_filters, Config as PytestConfig
+
+import pytestqt.qtbot
+import pytestqt.exceptions
 from pytestqt.qtbot import QtBot
 
+import anki
+import anki.collection
 import aqt
+import aqt.addons
 from aqt.profiles import ProfileManager
+from aqt.main import AnkiQt
+
 from . import wait_hook
 
 
@@ -262,8 +258,11 @@ def anki_running(
 
 				def cleanup(mw: aqt.main.AnkiQt):
 
-					with qtbot.wait_callback() as cb:
-						mw.closeAllWindows(cb)
+					try:
+						with qtbot.wait_callback(timeout=100) as cb:
+							mw.closeAllWindows(cb)
+					except pytestqt.exceptions.TimeoutError:
+						pass
 					mw.errorHandler.unload()
 					mw.mediaServer.shutdown()
 
