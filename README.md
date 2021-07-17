@@ -45,4 +45,4 @@ I've been running this myself for a little while so the worst crashes are probab
 
 ## Development
 
-See [DEVELOPMENT.md](https://github.com/akdor1154/ankitunes/blob/master/README.md) for details.
+See [DEVELOPMENT.md](https://github.com/akdor1154/ankitunes/blob/master/DEVELOPMENT.md) for details.
