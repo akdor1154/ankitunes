@@ -38,17 +38,6 @@ def test_interactive(qtbot: QtBot, anki_running: aqt.AnkiApp) -> None:
 
 	assert nt is not None
 
-	deck_id = col.decks.id("Test Desk", create=True)
-	assert deck_id is not None
-
-	for note_input in notes:
-		n = Note(col, nt)
-		for field, val in note_input.items():
-			n[field] = val  # type: ignore
-		col.add_note(n, deck_id)
-
-	col.save()
-
 	# move to deck browser and wait
 	with wait_hook(qtbot, aqt.gui_hooks.deck_browser_did_render):
 

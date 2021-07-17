@@ -21,10 +21,12 @@ show sets
 
 
 Phase 2 -
-Manage note type and display
+ - [x] Manage note type and display
 
 Phase 3 -
-CI
+ - [x] CI
 
 Phase 4 -
-Add from The Session
+ - Add from The Session
+ - Deck defaults
+

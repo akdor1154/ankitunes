@@ -1,5 +1,6 @@
 import typing_extensions
 import aqt
+import aqt.main
 from typing import *
 
 
