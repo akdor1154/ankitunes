@@ -192,7 +192,7 @@ class MyAddCards(AddCards):
 
 			note["Name"] = tune.name
 			note["Tune Type"] = f"{tune.key} {tune.type}"
-			note["ABC"] = tune.abc
+			note["ABC"] = tune.abc.replace("\n", "<br />\n")
 			note["Link"] = tune.uri
 
 			self.editor.loadNote()
