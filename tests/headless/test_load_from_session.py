@@ -46,6 +46,27 @@ def test_successful_load_setting() -> None:
 	assert tune.name == "Some Tune"
 
 
+def test_successful_load_abc_transform() -> None:
+	with mock_urlopen(
+		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"id": 10, "abc": "notthisone", "key": "Cmajor"}, {"id": 11, "abc": "abc!abc", "key": "Cmajor"}]}'
+	):
+		result = get_from_thesession("https://thesession.org/tunes/1#setting11")
+	assert isinstance(result, Ok), f"{result.err_value.msg}"
+	tune = result.value
+	assert tune.abc == dedent(
+		"""\
+		X: 2
+		T: Some Tune
+		R: reel
+		M: 4/4
+		L: 1/8
+		K: Cmajor
+		abc
+		abc
+	"""
+	)
+
+
 def test_bad_uri() -> None:
 	with mock_urlopen(
 		'{"id": 1, "name":"Some Tune", "type": "reel", "settings": [{"id": 2, "abc": "abc", "key": "Cmajor"}]}'
