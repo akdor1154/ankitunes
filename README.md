@@ -34,6 +34,11 @@ To add more tunes, click the "Add" button on the main screen. This will pop up a
   - If you paste in the url to just a tune (e.g. https://thesession.org/tunes/20714) then it will fetch a random setting for that tune - some chaos to keep life interesting!
   - If you paste in the url to a specific setting (e.g. https://thesession.org/tunes/20714#setting41112 - you can get these by the little **#** under individual settings on The Session), it will fetch that setting.
 
+If you want to use the **Practice Sets** feature, make sure you fill in the tune type! I need to know if your tunes are jigs, reels, slipjigs, etc so I can put sets of the right meter together.
+
+### Report bugs!
+I've been running this myself for a little while so the worst crashes are probably gone, but there are probably still some rough edges - please [open an issue](https://github.com/akdor1154/ankitunes/issues/new/choose) if you find a bug or just want to ask a question.
+
 
 ## Installation
 
