@@ -10,11 +10,8 @@ It lives on [GitHub](https://github.com/akdor1154/ankitunes), and may also be fo
 ## Features
 
  - Store your tunes as ABC, view them as notation
-
  - Compiles sets of tunes for you to practice - I find this helps me recall tunes better than playing them individually
-
  - Quickly add new tunes by pasting in URLs from [thesession.org](https://thesession.org)
-
  - Pre-configures Anki with some nice defaults related to learning tunes (the defaults are more suited for learning masses of little things, e.g. language vocab)
 
 
@@ -43,8 +40,7 @@ I've been running this myself for a little while so the worst crashes are probab
 ## Installation
 
 1) Install Anki if you don't already use it: https://apps.ankiweb.net/
-
-2) Install this add-on - go to Tools -> Add-ons, click "Get Add-ons", and paste in the magic number: [1456964007](https://ankiweb.net/shared/info/1456964007)
+2) Install this add-on - go to Tools -> Add-ons, click "Get Add-ons", and paste in the magic number: 1456964007 (or see https://ankiweb.net/shared/info/1456964007)
 
 
 ## Development
