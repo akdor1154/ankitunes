@@ -2,6 +2,8 @@ from pytestqt.qtbot import QtBot
 from contextlib import contextmanager
 from typing import *
 
+from pytestqt.wait_signal import CallbackBlocker
+
 H = TypeVar("H")
 
 
@@ -15,9 +17,22 @@ class AnkiHook(Protocol[H]):
 		...
 
 
+import functools
+
+
 @contextmanager
-def wait_hook(qtbot: QtBot, hook: AnkiHook[Any]) -> Generator[None, None, None]:
-	with qtbot.wait_callback() as cb:
-		hook.append(cb)
-		yield
-	hook.remove(cb)
+def wait_hook(
+	qtbot: QtBot, hook: AnkiHook[Any], **kwargs: Any
+) -> Generator[CallbackBlocker, None, None]:
+	try:
+		with qtbot.waitCallback(**kwargs) as cb:
+
+			def wrappedCB(*args, **kwargs):
+				hook.remove(wrappedCB)
+				return cb(*args, **kwargs)
+
+			hook.append(wrappedCB)
+
+			yield cb
+	finally:
+		hook.remove(wrappedCB)
