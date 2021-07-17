@@ -24,11 +24,6 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 	import ankitunes
 	import ankitunes.col_note_type
 
-	mw.show()
-
-	with wait_hook(qtbot, aqt.gui_hooks.main_window_did_init):
-		pass
-
 	col = mw.col
 	assert col is not None
 
@@ -127,6 +122,7 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 			(matching.length == 1)
 		"""
 
+	# check answers have been rendered with text
 	with qtbot.waitCallback() as cb:
 		print(checkForTitleJs("Cooley's"))
 		mw.reviewer.web.evalWithCallback(checkForTitleJs("Cooley's"), cb)

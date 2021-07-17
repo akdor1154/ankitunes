@@ -1,6 +1,7 @@
 # https://github.com/krassowski/anki_testing/blob/master/anki_testing.py
 
 # coding: utf-8
+from argparse import Namespace
 from posix import environ
 import shutil
 import tempfile
@@ -11,6 +12,8 @@ import os
 import os.path
 
 import sys
+from PyQt5.QtCore import QThread
+from _pytest.config import apply_warning_filters
 import anki
 import anki.collection
 import aqt.addons
@@ -22,12 +25,13 @@ from pytestqt.qtbot import QtBot
 
 import aqt
 from aqt.profiles import ProfileManager
+from . import wait_hook
 
 
 @contextmanager
 def temporary_user(
 	dir_name: str, name: str = "__Temporary Test User__", lang: str = "en_US"
-) -> Generator[str, None, None]:
+) -> Generator[Tuple[ProfileManager, str], None, None]:
 
 	# prevent popping up language selection dialog
 	original = ProfileManager.setDefaultLang
@@ -50,7 +54,7 @@ def temporary_user(
 	pm.name = name
 
 	try:
-		yield name
+		yield pm, name
 	finally:
 		# cleanup
 		pm.remove(name)
@@ -64,7 +68,7 @@ def temporary_dir() -> Generator[str, None, None]:
 		yield tempdir
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def ankiaddon_cmd(request: pytest.FixtureRequest) -> Any:
 	return request.config.getoption("--ankiaddon")
 
@@ -139,11 +143,6 @@ def fix_qt() -> Generator[None, None, None]:
 		yield
 
 
-@pytest.fixture(scope="session")
-def qapp(fix_qt: Any, qapp: Any) -> Generator[Any, None, None]:
-	yield qapp
-
-
 def clean_hooks() -> None:
 	if "anki.hooks" in sys.modules:
 		import anki.hooks
@@ -157,6 +156,14 @@ def clean_hooks() -> None:
 		for name, maybeHook in vars(aqt.gui_hooks).items():
 			if hasattr(maybeHook, "_hooks"):
 				maybeHook._hooks = []
+
+	# empty = set()
+	# for mod in list(sys.modules)[::-1]:
+	# 	if {"aqt", "anki", "ankitunes"}.intersection(mod.split(".")) != empty:
+	# 		print(f"deleting {mod}")
+	# 		del sys.modules[mod]
+	# 	else:
+	# 		print(f"left {mod}")
 
 	# delete ankitunes module - we need to re-import it to
 	# reload all its hooks if necessary.
@@ -191,15 +198,11 @@ def screenshot(mw: AnkiQt) -> None:
 	img.save(file, "png")
 
 
-@pytest.fixture
-def anki_running(
-	qtbot: QtBot, ankiaddon_cmd: Optional[str], install_ankitunes: bool = True
-) -> Generator[aqt.AnkiApp, None, None]:
+# anki segfaults if it gets run for a second time in the same py execution.
+# This would otherwise be a normal per-test fixture.
+@pytest.fixture(scope="session")
+def qapp(fix_qt) -> Generator[aqt.AnkiApp, None, None]:
 
-	clean_hooks()
-
-	import aqt
-	from aqt import _run
 	from aqt import AnkiApp
 
 	# don't use the second instance mechanism, start a new instance every time
@@ -208,29 +211,9 @@ def anki_running(
 
 	AnkiApp.secondInstance = mock_secondInstance  # type: ignore
 
-	# we need a new user for the test
-	with temporary_dir() as dir_name:
-		with temporary_user(dir_name) as user_name:
+	app = AnkiApp(argv=["anki", "-p", "DUMMY", "-b", "DUMMY"])
 
-			argv = ["anki", "-p", user_name, "-b", dir_name]
-			argv = _install_ankitunes(argv, dir_name, ankiaddon_cmd)
-
-			print(f"running anki with argv={argv}")
-			app = _run(argv=argv, exec=False)
-			assert app is not None
-			assert aqt.mw is not None
-			try:
-				qtbot.addWidget(aqt.mw)
-				yield app
-			finally:
-				screenshot(aqt.mw)
-				# clean up what was spoiled
-				app.closeAllWindows()
-
-	# remove hooks added during app initialization
-	from anki import hooks
-
-	hooks._hooks = {}
+	yield app
 
 	# test_nextIvl will fail on some systems if the locales are not restored
 	import locale
@@ -238,7 +221,63 @@ def anki_running(
 	locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())  # type: ignore
 
 
-import argparse
+@pytest.fixture()
+def anki_running(
+	qtbot: QtBot,
+	qapp: aqt.AnkiApp,
+	ankiaddon_cmd: Optional[str],
+	install_ankitunes: bool = True,
+):
+
+	import aqt
+	from aqt import _run
+	import aqt.main
+
+	assert aqt.mw is None
+
+	clean_hooks()
+
+	# we need a new user for the test
+	with temporary_dir() as dir_name:
+		with temporary_user(dir_name) as (pm, user_name):
+
+			argv = ["anki", "-p", user_name, "-b", dir_name]
+			argv = _install_ankitunes(argv, dir_name, ankiaddon_cmd)
+
+			print(f"running anki with argv={argv}")
+
+			# lifted from aqt _run
+			opts, args = aqt.parseArgs(argv)
+			backend = aqt.setupLangAndBackend(pm, qapp, opts.lang, True)
+
+			# i18n & backend
+
+			aqt.mw = aqt.main.AnkiQt(qapp, pm, backend, opts, args)
+
+			with wait_hook(qtbot, aqt.gui_hooks.main_window_did_init):
+				pass
+
+			try:
+				aqt.mw.show()
+
+				def cleanup(mw: aqt.main.AnkiQt):
+
+					with qtbot.wait_callback() as cb:
+						mw.closeAllWindows(cb)
+					mw.errorHandler.unload()
+					mw.mediaServer.shutdown()
+
+				qtbot.addWidget(aqt.mw, before_close_func=cleanup)
+
+				yield
+
+			finally:
+				screenshot(aqt.mw)
+
+	aqt.mw = None
+
+	# remove hooks added during app initialization
+	clean_hooks()
 
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
