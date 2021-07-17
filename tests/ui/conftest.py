@@ -256,8 +256,7 @@ def anki_running(
 			try:
 				aqt.mw.show()
 
-				def cleanup(mw: aqt.main.AnkiQt):
-
+				def cleanup(mw: aqt.main.AnkiQt) -> None:
 					try:
 						with qtbot.wait_callback(timeout=100) as cb:
 							mw.closeAllWindows(cb)
