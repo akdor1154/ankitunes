@@ -13,7 +13,7 @@ import os.path
 
 import sys
 from PyQt5.QtCore import QThread
-from _pytest.config import apply_warning_filters
+from _pytest.config import apply_warning_filters, Config as PytestConfig
 import anki
 import anki.collection
 import aqt.addons
@@ -289,3 +289,9 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
 	else:
 		if is_fiddle:
 			pytest.skip("Disabling fiddles")
+
+
+def pytest_configure(config: PytestConfig) -> None:
+	config.addinivalue_line(
+		"markers", 'fiddle: marker for "tests" that stop for manual fiddling'
+	)

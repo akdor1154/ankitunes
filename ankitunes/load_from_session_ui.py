@@ -67,10 +67,10 @@ class URIContainer(QWidget):
 
 		# validation
 		VALID_REGEX = (
-			"(https?://)?"
-			+ "(www\.)?thesession.org"
+			r"(https?://)?"
+			+ r"(www\.)?thesession.org"
 			+ load_from_session.PATH_REGEX.pattern
-			+ f"(#{load_from_session.FRAGMENT_REGEX.pattern})?"
+			+ rf"(#{load_from_session.FRAGMENT_REGEX.pattern})?"
 		)
 
 		uriValidator = QRegExpValidator(QRegExp(VALID_REGEX), self)
