@@ -23,6 +23,13 @@ logger = logging.getLogger(__name__)
 
 # TNT - Tune Note Type
 
+
+NoteFields_v1 = TypedDict(
+	"NoteFields_v1", {"Name": str, "Tune Type": str, "ABC": str, "Link": str}
+)
+
+NoteFields = NoteFields_v1
+
 # TODO: allow configuration of this.
 TNT_NAME = "AnkiTune"
 

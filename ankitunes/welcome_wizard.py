@@ -3,7 +3,8 @@ from anki.decks import DeckConfig
 from . import col_note_type
 from typing import *
 from .util import mw
-from .tunes.data import cooleys, cup_of_tea, Note_v1
+from .tunes.data import cooleys, cup_of_tea
+from .col_note_type import NoteFields
 import anki.notes
 import aqt.gui_hooks
 import aqt

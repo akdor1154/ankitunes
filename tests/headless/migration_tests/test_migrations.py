@@ -7,10 +7,11 @@ from anki.decks import Deck
 from anki.models import Field, ModelManager
 import anki.notes
 import anki.cards
-from ankitunes.col_note_type import TNTMigrator
+from ankitunes.col_note_type import TNTMigrator, NoteFields
 from ankitunes.result import Result, Ok
 
-from ankitunes.tunes.data import cooleys, cup_of_tea, Note_v1
+from ankitunes.tunes.data import cooleys, cup_of_tea
+
 
 notes = [cooleys, cup_of_tea]
 
@@ -31,7 +32,7 @@ def test_migration_data_integrity(empty_collection: ACollection) -> None:
 	col.save()
 
 	# add notes
-	def toAnkiNote(note: Note_v1) -> anki.notes.Note:
+	def toAnkiNote(note: NoteFields) -> anki.notes.Note:
 		n = anki.notes.Note(col=col, model=v1nt)
 		for fieldName, fieldValue in note.items():
 			n[fieldName] = fieldValue  # type: ignore

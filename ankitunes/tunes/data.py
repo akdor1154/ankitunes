@@ -1,9 +1,8 @@
 from typing import *
 from textwrap import dedent
+from ..col_note_type import NoteFields_v1
 
-Note_v1 = TypedDict("Note_v1", {"Name": str, "Tune Type": str, "ABC": str, "Link": str})
-
-cooleys: Note_v1 = {
+cooleys: NoteFields_v1 = {
 	"Name": "Cooleys",
 	"Tune Type": "em reel",
 	"ABC": dedent(
@@ -23,7 +22,7 @@ cooleys: Note_v1 = {
 	"Link": "https://thesession.org/tunes/1#setting1",
 }
 
-cup_of_tea: Note_v1 = {
+cup_of_tea: NoteFields_v1 = {
 	"Name": "The Cup of Tea",
 	"Tune Type": "Edor reel",
 	"ABC": dedent(
