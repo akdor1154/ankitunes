@@ -39,7 +39,7 @@ lint-format:
 
 .PHONY: lint-mypy
 lint-mypy:
-	poetry run mypy ankitunes
+	poetry run mypy
 
 .PHONY: lint
 lint: lint-format lint-mypy

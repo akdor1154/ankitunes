@@ -16,6 +16,7 @@ from typing import *
 import aqt.gui_hooks
 import json
 import pytestqt.exceptions
+import functools
 
 import threading
 
@@ -27,7 +28,7 @@ from .data import notes
 SHITTY_WAIT_MS = 200
 
 
-def test_load_from_session_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
+def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 	mw = aqt.mw
 	assert mw is not None
 
@@ -62,7 +63,7 @@ def test_load_from_session_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 					assert dialog.isVisible()
 					return dialog
 
-				def chooser_is_open() -> bool:
+				def chooser_is_open() -> None:
 					get_chooser()
 					return None
 
@@ -87,8 +88,8 @@ def test_load_from_session_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 						self.chooser.reject()
 					raise
 
-			def join(self, *args, **kwargs) -> None:
-				super().join(*args, **kwargs)
+			def join(self, timeout: Optional[float] = None) -> None:
+				super().join(timeout=timeout)
 				assert self.result is True
 
 		t = DealWithStupidBlockingDialog(None, name="oh plz")
