@@ -1,11 +1,10 @@
 from typing import *
 from textwrap import dedent
-from ..col_note_type import NoteFields
+from ankitunes.col_note_type import NoteFields_v1
 
-cooleys: NoteFields = {
+cooleys_v1: NoteFields_v1 = {
 	"Name": "Cooleys",
-	"Key": "Edor",
-	"Tune Type": "reel",
+	"Tune Type": "em reel",
 	"ABC": dedent(
 		"""
 		X: 1
@@ -23,10 +22,10 @@ cooleys: NoteFields = {
 	"Link": "https://thesession.org/tunes/1#setting1",
 }
 
-cup_of_tea: NoteFields = {
+
+cup_of_tea_v1: NoteFields_v1 = {
 	"Name": "The Cup of Tea",
-	"Key": "Edor",
-	"Tune Type": "reel",
+	"Tune Type": "Edor reel",
 	"ABC": dedent(
 		"""
 		X: 1

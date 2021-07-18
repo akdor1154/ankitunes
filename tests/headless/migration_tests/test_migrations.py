@@ -35,7 +35,7 @@ def v1_collection_with_notes(empty_collection: ACollection) -> ColFixture:
 
 
 def migrate_empty_to_v1(
-	empty_collection: ACollection, cards: List[NoteFields_v1] = v1_notes
+	empty_collection: ACollection, notes: List[NoteFields_v1] = v1_notes
 ) -> ColFixture:
 
 	col = empty_collection
@@ -56,7 +56,7 @@ def migrate_empty_to_v1(
 			n[fieldName] = fieldValue  # type: ignore
 		return n
 
-	ankiNotes = [to_anki_note(note) for note in v1_notes]
+	ankiNotes = [to_anki_note(note) for note in notes]
 
 	for an in ankiNotes:
 		col.add_note(an, deck_id=deck_id)
@@ -66,13 +66,13 @@ def migrate_empty_to_v1(
 	return ColFixture(col, v1nt, migrator)
 
 
-@pytest.mark.xfail
 def test_migration_v1_to_v2(v1_collection_with_notes: ColFixture) -> None:
 	col, v1nt, migrator = v1_collection_with_notes
 
 	v2nt = migrator.migrate_v1_to_v2(v1nt).unwrap()
 	migrator.migrate_template(v2nt)
 	col.models.save(v2nt)
+	col.save()
 
 	expected_cooleys_v2: NoteFields_v2 = {
 		"Name": "Cooleys",
@@ -99,10 +99,9 @@ def test_migration_v1_to_v2(v1_collection_with_notes: ColFixture) -> None:
 		col.getNote(nid) for nid in col.find_notes(SearchNode(note="AnkiTune"))
 	]
 	actual_cooleys_v2 = next(c for c in migrated_notes if c["Name"] == "Cooleys")
-	assert dict(actual_cooleys_v2) == expected_cooleys_v2
+	assert dict(actual_cooleys_v2.items()) == expected_cooleys_v2
 
 
-@pytest.mark.xfail
 def test_migration_v1_to_v2_no_key(empty_collection: ACollection) -> None:
 
 	keyless_v1: NoteFields_v1 = {
@@ -120,6 +119,11 @@ def test_migration_v1_to_v2_no_key(empty_collection: ACollection) -> None:
 	}
 
 	col, v1nt, migrator = migrate_empty_to_v1(empty_collection, [keyless_v1])
+
+	v2nt = migrator.migrate_v1_to_v2(v1nt).unwrap()
+	migrator.migrate_template(v2nt)
+	col.models.save(v2nt)
+	col.save()
 
 	expected_keyless_v2: NoteFields_v2 = {
 		"Name": "Keyless",
@@ -140,7 +144,7 @@ def test_migration_v1_to_v2_no_key(empty_collection: ACollection) -> None:
 		col.getNote(nid) for nid in col.find_notes(SearchNode(note="AnkiTune"))
 	]
 	actual_keyless_v2 = next(c for c in migrated_notes if c["Name"] == "Keyless")
-	assert dict(actual_keyless_v2) == expected_keyless_v2
+	assert dict(actual_keyless_v2.items()) == expected_keyless_v2
 
 
 def test_migration_data_integrity(v1_collection_with_notes: ColFixture) -> None:
@@ -176,12 +180,7 @@ def test_migration_data_integrity(v1_collection_with_notes: ColFixture) -> None:
 	cards = [col.getCard(card_id) for card_id in card_ids]
 
 	for originalNote in v1_notes:
-		retrievedNote = next(
-			n
-			for n in retrieved_notes
-			if all(n[field] == fieldValue for field, fieldValue in originalNote.items())
-		)
-		assert retrievedNote is not None
+		retrievedNote = next(n for n in retrieved_notes if n["Name"] == originalNote["Name"])
 		assert retrievedNote.model() == nt
 
 	for card in cards:

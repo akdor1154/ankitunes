@@ -60,17 +60,15 @@ def turn_card_into_set(
 	focus_note = cast(NoteFields, focus_card.note())
 
 	# get extra cards from scheduler
-	tune_type_val = focus_note["Tune Type"]
+	tune_type = focus_note["Tune Type"]
 
 	note_name = focus_note["Name"] if "Name" in focus_note else "[unnamed]"
 
-	try:
-		key, tune_type = tune_type_val.split(" ", 1)
-	except ValueError:
+	if " " in tune_type:
 		error(
 			f"Note {note_name} has an invalid tune type.<br />"
 			"This means I can't find tunes to go with it in a set.<br />"
-			"Please set it to something like <i>Gm reel</i>.",
+			"Please set it to something like <i>reel</i>.",
 			mode=ErrorMode.HINT,
 		)
 		return [focus_card]
@@ -94,16 +92,16 @@ def turn_card_into_set(
 			mode=ErrorMode.SCARY_WARNING,
 		)
 
+	# unsure why type assertion is required here, mypy sucks
+	search_conditions: List[Union[str, SearchNode]] = [
+		f'"Tune Type:{tune_type}"',
+		SearchNode(negated=SearchNode(nid=focus_card.nid)),
+	]
+	if deck is not None:
+		search_conditions.append(SearchNode(deck=deck["name"]))
+
 	search = col.group_searches(
-		*[
-			join(
-				f'"Tune Type:* {tune_type}"',
-				"OR",
-				f'"Tune Type:{tune_type}"',
-			),
-			SearchNode(negated=SearchNode(nid=focus_card.nid)),
-			*([SearchNode(deck=deck["name"])] if deck is not None else []),
-		],
+		*search_conditions,
 		joiner="AND",
 	)
 	search_str = col.build_search_string(search)

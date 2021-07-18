@@ -36,7 +36,7 @@ NoteFields_v2 = TypedDict(
 )
 
 
-NoteFields = NoteFields_v1
+NoteFields = NoteFields_v2
 
 # TODO: allow configuration of this.
 TNT_NAME = "AnkiTune"
@@ -44,7 +44,7 @@ TNT_NAME = "AnkiTune"
 
 class TNTVersion(IntEnum):
 	V1 = 1
-	# V2 = 2
+	V2 = 2
 
 
 class FakeVersion(IntEnum):
@@ -88,7 +88,9 @@ _MigrationErr = Union[MigrationErr.NameTaken]
 # migration_v0_to_v1(self, nt) -> nt
 # They are registered with the @migration decorator,
 # checked for sanity, and stored in _migrations.
-Migration = Callable[["TNTMigrator", NoteType], Result[NoteType, _MigrationErr]]
+Migration = Callable[
+	["TNTMigrator", Optional[NoteType]], Result[NoteType, _MigrationErr]
+]
 
 _migrations: Dict[TNTVersion, Migration] = {}
 
@@ -157,14 +159,17 @@ class TNTMigrator:
 				continue
 
 			if not version + 1 == target_version:
-				raise Exception("migration invariant check failed!")
+				raise Exception(
+					f"migration invariant check failed! {version=}+1 != {target_version=}"
+				)
 
 			migrate_func = _migrations[target_version]
 			logger.info(f"migrating with {migrate_func}")
-			migrate_res = migrate_func(self, cast(NoteType, nt))
+			migrate_res = migrate_func(self, nt)
 			if isinstance(migrate_res, Err):
 				return migrate_res
 			nt = migrate_res.value
+			version = target_version
 
 			self.mn.save(nt)
 
@@ -200,6 +205,45 @@ class TNTMigrator:
 		nt["other"] = nt.get("other", {})
 		nt["other"][NT_KEY] = True
 		nt["other"][NT_VER_KEY] = 1
+
+		return Ok(nt)
+
+	@migration
+	def migrate_v1_to_v2(self, nt: Optional[NoteType]) -> Result[NoteType, _MigrationErr]:
+		# for v0, nt is always None...
+
+		if nt is None:
+			raise Exception("migration invariant check 2 failed!")
+
+		keyField = self.mn.new_field("Key")
+
+		self.mn.add_field(nt, keyField)
+		self.mn.reposition_field(nt, keyField, 1)
+
+		nt["other"][NT_VER_KEY] = 2
+
+		self.mn.save(nt)
+
+		def split_tune_type(v1_tune_type: str) -> Tuple[str, str]:
+			"returns (key, tune type)"
+			key_and_type = v1_tune_type.split(" ", 1)
+			if len(key_and_type) == 1:
+				return "", key_and_type[0]
+
+			elif len(key_and_type) == 2:
+				return tuple(key_and_type)  # type: ignore
+
+			else:
+				raise Exception("unreachable")
+
+		col: AnkiCollection = self.mn.col
+		for note in [col.getNote(nid) for nid in self.mn.nids(nt["id"])]:
+			key, tt = split_tune_type(note["Tune Type"])
+			note["Key"] = key
+			note["Tune Type"] = tt
+			note.flush()
+
+		col.save()
 
 		return Ok(nt)
 

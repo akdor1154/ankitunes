@@ -190,12 +190,18 @@ class MyAddCards(AddCards):
 				print("Got a tune, but the Editor's note wasn't of the Ankitunes note type")
 				return
 
-			typed_note = cast(NoteFields, note)  # protect us from ourselves
+			# protect us from ourselves - we need to update this if note schema changes
+			fieldsToWrite: NoteFields = {
+				"Name": tune.name,
+				"Key": tune.key,
+				"Tune Type": tune.type,
+				"ABC": tune.abc.replace("\n", "<br />\n"),
+				"Link": tune.uri,
+			}
 
-			typed_note["Name"] = tune.name
-			typed_note["Tune Type"] = f"{tune.key} {tune.type}"
-			typed_note["ABC"] = tune.abc.replace("\n", "<br />\n")
-			typed_note["Link"] = tune.uri
+			for field, value in fieldsToWrite.items():
+				assert isinstance(value, str)
+				note[field] = value
 
 			self.editor.loadNote()
 

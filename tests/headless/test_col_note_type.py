@@ -104,6 +104,7 @@ def test_migrate_version(mn: ModelManager, version: NT.TNTVersion) -> None:
 		migrator = getattr(m, f"migrate_v{current_version}_to_v{next_version}")
 		_nt = migrator(_nt).unwrap()
 		mn.save(cast(NoteType, _nt))
+		mn.col.save()
 
 	nt = mn.byName(TNT_NAME)
 
@@ -116,7 +117,7 @@ def test_migrate(mn: ModelManager) -> None:
 	m.setup_tune_note_type()
 
 	nt = mn.byName(TNT_NAME)
-	assert m.get_current_version() == Ok((NT.TNTVersion.V1, nt))
+	assert m.get_current_version() == Ok((NT.TNTVersion.V2, nt))
 
 	assert nt is not None
 	assert len(nt["tmpls"]) == 1
@@ -125,7 +126,7 @@ def test_migrate(mn: ModelManager) -> None:
 def test_is_ankitunes_version(mn: ModelManager) -> None:
 
 	nt = mn.new("is ankitunes")
-	nt["other"] = {"ankitunes_nt": True, "ankitunes_nt_version": 1}
+	nt["other"] = {"ankitunes_nt": True, "ankitunes_nt_version": 2}
 
 	assert NT.is_ankitunes_nt(nt) is True
 
