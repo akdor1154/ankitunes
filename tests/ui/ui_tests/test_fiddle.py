@@ -34,7 +34,7 @@ def test_interactive(qtbot: QtBot, anki_running: aqt.AnkiApp) -> None:
 	assert isinstance(vers_result, Ok)
 
 	ver, nt = vers_result.value
-	assert ver == ankitunes.col_note_type.TNTVersion.V1
+	assert ver == ankitunes.col_note_type.TNTVersion.V2
 
 	assert nt is not None
 

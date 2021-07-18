@@ -197,7 +197,7 @@ def screenshot(mw: AnkiQt) -> None:
 # anki segfaults if it gets run for a second time in the same py execution.
 # This would otherwise be a normal per-test fixture.
 @pytest.fixture(scope="session")
-def qapp(fix_qt) -> Generator[aqt.AnkiApp, None, None]:
+def qapp(fix_qt: None) -> Generator[aqt.AnkiApp, None, None]:
 
 	from aqt import AnkiApp
 
@@ -223,7 +223,7 @@ def anki_running(
 	qapp: aqt.AnkiApp,
 	ankiaddon_cmd: Optional[str],
 	install_ankitunes: bool = True,
-):
+) -> Generator[None, None, None]:
 
 	import aqt
 	from aqt import _run

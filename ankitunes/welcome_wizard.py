@@ -3,7 +3,8 @@ from anki.decks import DeckConfig
 from . import col_note_type
 from typing import *
 from .util import mw
-from .tunes.data import cooleys, cup_of_tea, Note_v1
+from .tunes.data import cooleys, cup_of_tea
+from .col_note_type import NoteFields
 import anki.notes
 import aqt.gui_hooks
 import aqt
@@ -66,19 +67,24 @@ def setup_deck(col: AnkiCollection, deck_id: Optional[int] = None) -> int:
 	return deck_id
 
 
+T = TypeVar("T")
+
+
+def not_none(thing: Optional[T]) -> T:
+	assert thing is not None
+	return thing
+
+
 def setup_cards(col: AnkiCollection, deck_id: int) -> None:
 
-	deck: Dict[str, Any] = col.decks.get(
-		deck_id, default=False
-	)  # type: ignore  # assert isn't enough to mark this as non-None inside toAnkiNote()
-	assert deck is not None
+	deck: Dict[str, Any] = not_none(col.decks.get(deck_id, default=False))
 
 	nt = col_note_type.migrate(col)
 
 	notes = [cooleys, cup_of_tea]
 
 	# add notes
-	def toAnkiNote(note: Note_v1) -> Optional[anki.notes.Note]:
+	def toAnkiNote(note: NoteFields) -> Optional[anki.notes.Note]:
 		"""creates a new note. Returns None if a note with this name already exists."""
 		existing = col.find_notes(f'"Name:{note["Name"]}"', SearchNode(deck=deck["name"]))
 
@@ -87,7 +93,9 @@ def setup_cards(col: AnkiCollection, deck_id: int) -> None:
 
 		n = anki.notes.Note(col=col, model=nt)
 		for fieldName, fieldValue in note.items():
-			n[fieldName] = fieldValue  # type: ignore
+			# https://github.com/python/mypy/issues/7981 would remove the need for this
+			assert isinstance(fieldValue, str)
+			n[fieldName] = fieldValue
 		return n
 
 	ankiNotes = [toAnkiNote(note) for note in notes]

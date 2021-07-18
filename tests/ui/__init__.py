@@ -27,7 +27,7 @@ def wait_hook(
 	try:
 		with qtbot.waitCallback(**kwargs) as cb:
 
-			def wrappedCB(*args, **kwargs):
+			def wrappedCB(*args: Any, **kwargs: Any) -> Any:
 				hook.remove(wrappedCB)
 				return cb(*args, **kwargs)
 

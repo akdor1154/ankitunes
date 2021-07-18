@@ -10,12 +10,14 @@ from pytestqt.qtbot import QtBot
 import time
 import ankitunes.col_note_type
 import ankitunes.load_from_session_ui
+from ankitunes.col_note_type import NoteFields
 from ankitunes.result import Result, Ok, Err
 from textwrap import dedent
 from typing import *
 import aqt.gui_hooks
 import json
 import pytestqt.exceptions
+import functools
 
 import threading
 
@@ -27,7 +29,7 @@ from .data import notes
 SHITTY_WAIT_MS = 200
 
 
-def test_load_from_session_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
+def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 	mw = aqt.mw
 	assert mw is not None
 
@@ -62,7 +64,7 @@ def test_load_from_session_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 					assert dialog.isVisible()
 					return dialog
 
-				def chooser_is_open() -> bool:
+				def chooser_is_open() -> None:
 					get_chooser()
 					return None
 
@@ -87,8 +89,8 @@ def test_load_from_session_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 						self.chooser.reject()
 					raise
 
-			def join(self, *args, **kwargs) -> None:
-				super().join(*args, **kwargs)
+			def join(self, timeout: Optional[float] = None) -> None:
+				super().join(timeout=timeout)
 				assert self.result is True
 
 		t = DealWithStupidBlockingDialog(None, name="oh plz")
@@ -137,17 +139,26 @@ def test_load_from_session_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 
 	pprint(dict(note))
 
-	assert note["Name"] == "The Green Cake"
-	assert note["Tune Type"] == "Amajor reel"
-	assert (
-		dedent(
+	# write assertions this way so we are forced to update this
+	# test when we make future changes to note type schema
+	expectations: NoteFields = {
+		"Name": "The Green Cake",
+		"Key": "Amajor",
+		"Tune Type": "reel",
+		"ABC": dedent(
 			"""\
 		F2EF AFAB|cffe c2 BA|B3A B/2c/2d cB|AcBA BAFE|<br />
 		 F2EF AFAB|cffe c2 BA|a3b afef|ecBc A2 BA:|"""
-		)
-		in note["ABC"]
-	)
-	assert note["Link"] == "https://thesession.org/tunes/20714#setting41112"
+		),
+		"Link": "https://thesession.org/tunes/20714#setting41112",
+	}
+
+	for field, val in expectations.items():
+		assert isinstance(val, str)
+		if field == "ABC":
+			continue
+		assert note[field] == val
+	assert expectations["ABC"] in note["ABC"]
 
 	with wait_hook(qtbot, aqt.gui_hooks.add_cards_did_add_note):
 		add_window.addButton.click()

@@ -19,7 +19,7 @@ from aqt.main import AnkiQt
 from aqt.addcards import AddCards
 
 from . import col_note_type
-from .col_note_type import TNTMigrator
+from .col_note_type import TNTMigrator, NoteFields
 from . import load_from_session
 from .load_from_session import GrabResult
 from .util import mw
@@ -190,10 +190,18 @@ class MyAddCards(AddCards):
 				print("Got a tune, but the Editor's note wasn't of the Ankitunes note type")
 				return
 
-			note["Name"] = tune.name
-			note["Tune Type"] = f"{tune.key} {tune.type}"
-			note["ABC"] = tune.abc.replace("\n", "<br />\n")
-			note["Link"] = tune.uri
+			# protect us from ourselves - we need to update this if note schema changes
+			fieldsToWrite: NoteFields = {
+				"Name": tune.name,
+				"Key": tune.key,
+				"Tune Type": tune.type,
+				"ABC": tune.abc.replace("\n", "<br />\n"),
+				"Link": tune.uri,
+			}
+
+			for field, value in fieldsToWrite.items():
+				assert isinstance(value, str)
+				note[field] = value
 
 			self.editor.loadNote()
 
