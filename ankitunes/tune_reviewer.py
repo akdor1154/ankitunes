@@ -17,7 +17,7 @@ from typing import *
 
 from .errors import error, ErrorMode
 from .util import mw
-from .col_note_type import is_ankitunes_nt
+from .col_note_type import is_ankitunes_nt, NoteFields
 
 HTML = NewType("HTML", str)
 Scheduler = Union[anki.sched.Scheduler, anki.schedv2.Scheduler]
@@ -55,8 +55,9 @@ def set_up_reviewer_bottom(web_content: aqt.webview.WebContent, context: Any) ->
 def turn_card_into_set(
 	focus_card: FocusCard, col: anki.collection.Collection, set_length: int
 ) -> Sequence[Card]:
+	""" prerequisite: focus_card has already been tested to be the latest ankitunes notetype."""
 
-	focus_note = focus_card.note()
+	focus_note = cast(NoteFields, focus_card.note())
 
 	# get extra cards from scheduler
 	tune_type_val = focus_note["Tune Type"]
