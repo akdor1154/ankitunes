@@ -28,6 +28,11 @@ NoteFields_v1 = TypedDict(
 	"NoteFields_v1", {"Name": str, "Tune Type": str, "ABC": str, "Link": str}
 )
 
+NoteFields_v2 = TypedDict(
+	"NoteFields_v2", {"Name": str, "Key": str, "Tune Type": str, "ABC": str, "Link": str}
+)
+
+
 NoteFields = NoteFields_v1
 
 # TODO: allow configuration of this.
