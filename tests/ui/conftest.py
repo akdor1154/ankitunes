@@ -23,6 +23,18 @@ from aqt.main import AnkiQt
 
 from . import wait_hook
 
+import unittest.mock
+
+def mock_send2trash(d):
+	from send2trash import send2trash as real_send2trash, TrashPermissionError
+	try:
+		real_send2trash(d)
+	except TrashPermissionError:
+		print('real send2trash failed, force-removing')
+		import shutil
+		shutil.rmtree(d)
+
+
 
 @contextmanager
 def temporary_user(
@@ -47,13 +59,17 @@ def temporary_user(
 	# this needs to be called explicitly
 	pm.setDefaultLang(0)
 
-	pm.name = name
+	# disable anki's update check
+	pm.load(name)
+	pm.meta['updates'] = False
+	pm.save()
 
 	try:
 		yield pm, name
 	finally:
 		# cleanup
-		pm.remove(name)
+		with unittest.mock.patch('aqt.profiles.send2trash', mock_send2trash):
+			pm.remove(name)
 		ProfileManager.setDefaultLang = original  # type: ignore
 
 

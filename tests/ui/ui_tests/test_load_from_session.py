@@ -147,7 +147,7 @@ def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 		"Tune Type": "reel",
 		"ABC": dedent(
 			"""\
-		F2EF AFAB|cffe c2 BA|B3A B/2c/2d cB|AcBA BAFE|<br />
+		F2EF AFAB|cffe c2 BA|B3A B/c/d cB|AcBA BAFE|<br />
 		 F2EF AFAB|cffe c2 BA|a3b afef|ecBc A2 BA:|"""
 		),
 		"Link": "https://thesession.org/tunes/20714#setting41112",

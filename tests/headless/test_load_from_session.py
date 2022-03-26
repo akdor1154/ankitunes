@@ -162,8 +162,8 @@ def test_real_cooleys() -> None:
 				K: Eminor
 				|:F|CGGC G2 CG|G2 FG BGFE|(3DCB, FB, GB,FB,|DB,DF BFDB,|
 				 CGGC G2 CG|G2 FG Bcde|fdcd BGFB|B,CDF C3:|
-				 |:d|cG ~G2 cede| cG ~G2 ecBG|(3FGF DF B,FDF|GFDF Bcde|
-				 cG ~G2 cede| cG ~G2 Bcde| fdcd BGFB| B,CDF C3:|
+				 |:d|cG ~G2 cede|cG ~G2 ecBG|(3FGF DF B,FDF|GFDF Bcde|
+				 cG ~G2 cede|cG ~G2 Bcde|fdcd BGFB|B,CDF C3:|
 				"""
 			)
 		),
