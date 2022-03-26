@@ -1,6 +1,9 @@
-default: all
+default: tsc bundle
 
-all:
+tsc:
+	../node_modules/.bin/tsc -noEmit
+
+bundle:
 	../node_modules/.bin/esbuild \
 		--bundle \
 		--outfile=../dist/card_template/template.js \

@@ -12,7 +12,7 @@ function replaceABC() {
 		} else if (abcDests.length == 0) {
 			throw new Error('Couldn\'t find abc destination!');
 		}
-		const abcDest = abcDests[0];
+		const abcDest = abcDests[0] as HTMLElement;
 
 		// if already done;
 		if (abcDest.hasAttribute(ANKITUNES_DONE_ATTR)) {
