@@ -3,7 +3,7 @@ import aqt.gui_hooks
 from aqt.qt import debug
 import aqt.webview
 from anki.cards import Card
-from anki.collection import BuiltinSort, SearchNode, Collection as AnkiCollection
+from anki.collection import SearchNode, Collection as AnkiCollection
 
 import aqt.reviewer
 import anki.collection

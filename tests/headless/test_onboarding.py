@@ -11,7 +11,7 @@ def test_empty_profile(empty_collection: AnkiCollection) -> None:
 	deck = col.decks.byName("Tunes")
 	assert deck is not None
 
-	note_ids = col.find_notes(SearchNode(deck=deck["name"]))
+	note_ids = col.find_notes(col.build_search_string(SearchNode(deck=deck["name"])))
 	assert len(note_ids) == 2
 
 	notes = [col.getNote(id) for id in note_ids]
@@ -48,7 +48,7 @@ def test_profile_with_deck_and_cards(empty_collection: AnkiCollection) -> None:
 	onboard(col)
 
 	# assert
-	note_ids = col.find_notes(SearchNode(deck=deck["name"]))
+	note_ids = col.find_notes(col.build_search_string(SearchNode(deck=deck["name"])))
 	assert len(note_ids) == 1, "onboard mucked with a deck that it should have left alone"
 
 	retrieved_note = col.getNote(note_ids[0])

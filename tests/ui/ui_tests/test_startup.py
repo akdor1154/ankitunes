@@ -47,7 +47,7 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 
 	# move to deck overview and wait
 	with wait_hook(qtbot, aqt.gui_hooks.overview_did_refresh):
-		mw.deckBrowser._selDeck(str(deck_id))
+		mw.deckBrowser.set_current_deck(deck_id)
 
 	# wait for overview web to render
 	with qtbot.waitCallback() as cb:

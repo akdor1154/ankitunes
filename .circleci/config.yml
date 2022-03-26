@@ -188,7 +188,7 @@ jobs:
               --addon-id 1456964007 \
               --title 'AnkiTunes' \
               --addon-zip $WORKSPACE/ankitunes.ankiaddon \
-              --min-version 2.1.41 \
+              --min-version 2.1.45 \
               --max-version "$ANKI_VERSION"
 
 workflows:
@@ -204,10 +204,10 @@ workflows:
             parameters:
               #python_docker_tag: ["3.8", "3.9"]
               python_docker_tag: ["3.8", "3.9"]
-              anki_version: ["2.1.41", "latest"]
+              anki_version: ["2.1.45", "latest"]
             exclude:
               - python_docker_tag: "3.8"
-                anki_version: "2.1.41"
+                anki_version: "2.1.45"
           filters:
             tags:
               only: /^v\d+\.\d+\.\d+.*$/

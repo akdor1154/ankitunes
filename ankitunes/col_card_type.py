@@ -1,11 +1,16 @@
+from __future__ import annotations
+from ast import Import
 import anki
 from aqt.addons import AddonManager
-from anki.models import ModelManager, NoteType, Template as AnkiTemplate
+from anki.models import ModelManager, NoteType
 from .util import mw
 from string import Template as pyTemplate
 from textwrap import dedent
 from typing import *
 import sys
+
+if TYPE_CHECKING:
+	from anki.models import TemplateDict as AnkiTemplate
 
 TEMPLATE_NAME = "Tune"
 TPL_VER_KEY = "ankitunes_tpl"

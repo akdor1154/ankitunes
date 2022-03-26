@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from PyQt5.QtCore import (
     QMetaObject,
     QObject,
@@ -26,6 +28,9 @@ from .util import mw
 from .result import Result, Ok, Err
 
 from typing import *
+
+if TYPE_CHECKING:
+	from anki.models import NotetypeId
 
 
 class URIContainer(QWidget):
@@ -142,17 +147,17 @@ class MyAddCards(AddCards):
 		self.tuneGrabber.done.connect(self.onNewTuneLoaded)  # type: ignore
 
 		# this gets called in super() but we need to call it again to hide/show the uricontainer.
-		self.onReset()
+		self.on_notetype_change(self.notetype_chooser.selected_notetype_id)
 
-	def onReset(self, model: None = None, keep: bool = False) -> None:
-		super().onReset(model=model, keep=keep)
+	def on_notetype_change(self, notetype_id: NotetypeId) -> None:
+		super().on_notetype_change(notetype_id)
 
 		if self.uriContainer is None:
 			return
 		if self.editor.note is None:
 			return
 
-		nt = self.editor.note.model()
+		nt = self.editor.note.note_type()
 
 		if nt is not None and col_note_type.is_ankitunes_nt(nt):
 			self.uriContainer.show()

@@ -22,8 +22,8 @@ def test_interactive(qtbot: QtBot, anki_running: aqt.AnkiApp) -> None:
 	qtbot.add_widget(aqt.mw)
 	mw.show()
 
-	with wait_hook(qtbot, aqt.gui_hooks.main_window_did_init):
-		pass
+	# with wait_hook(qtbot, aqt.gui_hooks.main_window_did_init):
+	# 	pass
 
 	col = mw.col
 	assert col is not None

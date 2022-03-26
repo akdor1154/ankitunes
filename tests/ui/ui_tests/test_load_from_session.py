@@ -1,4 +1,6 @@
 from re import A, L
+from traceback import print_exc
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QListWidget
 from anki.collection import SearchNode
 from anki.notes import Note
@@ -32,6 +34,7 @@ SHITTY_WAIT_MS = 200
 def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 	mw = aqt.mw
 	assert mw is not None
+	mw.show()
 
 	col = mw.col
 	assert col is not None
@@ -53,10 +56,15 @@ def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 		class DealWithStupidBlockingDialog(threading.Thread):
 			result: Optional[bool] = None
 			chooser: Optional[aqt.studydeck.StudyDeck] = None
+			cb: Callable[[], None] = None
+
+			def __init__(self, *args, cb, **kwargs):
+				super().__init__(*args, **kwargs)
+				self.cb = cb
 
 			def in_a_thread(self) -> None:
 				def get_chooser() -> aqt.studydeck.StudyDeck:
-					parent = add_window.form.modelArea
+					parent = add_window.notetype_chooser._widget
 					dialog = next(
 						(c for c in parent.children() if isinstance(c, aqt.studydeck.StudyDeck)), None
 					)
@@ -83,7 +91,9 @@ def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 				try:
 					self.in_a_thread()
 					self.result = True
+					self.cb()
 				except:
+					print_exc()
 					self.result = False
 					if self.chooser is not None:
 						self.chooser.reject()
@@ -93,12 +103,15 @@ def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 				super().join(timeout=timeout)
 				assert self.result is True
 
-		t = DealWithStupidBlockingDialog(None, name="oh plz")
 
-		t.start()
+		with qtbot.wait_callback() as cb:
 
-		# switch to note type, this will block until window closes
-		add_window.modelChooser.models.click()
+			t = DealWithStupidBlockingDialog(None, name="oh plz", cb=cb)
+
+			t.start()
+
+			# switch to note type, this will block until window closes
+			add_window.notetype_chooser.button.click()
 
 		# this should already be done, just in case
 		t.join()
@@ -165,7 +178,7 @@ def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 
 	add_window.closeButton.click()
 
-	note_ids = col.find_notes(SearchNode(deck=deck["name"]))
+	note_ids = col.find_notes(col.build_search_string(SearchNode(deck=deck["name"])))
 	notes = [col.getNote(nid) for nid in note_ids]
 
 	assert "The Green Cake" in [n["Name"] for n in notes]

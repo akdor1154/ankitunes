@@ -1,5 +1,5 @@
+from __future__ import annotations
 from anki.collection import SearchNode, Collection as AnkiCollection
-from anki.decks import DeckConfig
 from . import col_note_type
 from typing import *
 from .util import mw
@@ -8,6 +8,9 @@ from .col_note_type import NoteFields
 import anki.notes
 import aqt.gui_hooks
 import aqt
+
+if TYPE_CHECKING:
+	from anki.decks import DeckConfigDict
 
 DECK_NAME = "Tunes"
 
@@ -23,7 +26,7 @@ def setup_deck(col: AnkiCollection, deck_id: Optional[int] = None) -> int:
 	assert deck is not None
 
 	# get existing config
-	config: Optional[DeckConfig] = next(
+	config: Optional[DeckConfigDict] = next(
 		(
 			conf
 			for conf in col.decks.all_config()
@@ -116,7 +119,7 @@ def onboard(col: AnkiCollection) -> None:
 	assert deck is not None
 
 	# if the deck already has some notes
-	notes = col.find_notes(SearchNode(deck=deck["name"]))
+	notes = col.find_notes(col.build_search_string(SearchNode(deck=deck["name"])))
 	if len(notes) > 0:
 		# abort
 		return
