@@ -150,6 +150,7 @@ jobs:
             cp dist/ankitunes.ankiaddon "$WORKSPACE"/
             ANKI_VERSION=$(poetry run python \<<EOF
             import anki
+            import aqt
             print(anki.version)
             EOF
             )
