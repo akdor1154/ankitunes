@@ -11,10 +11,10 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "snowpack": "^3.5.2",
-    "typescript": "^4.3.2"
+    "esbuild": "^0.14.27",
+    "typescript": "^4.6.3"
   },
   "dependencies": {
-    "abcjs": "^5.12.0"
+    "abcjs": "^6.0.2"
   }
 }
