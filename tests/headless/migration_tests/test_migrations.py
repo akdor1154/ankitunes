@@ -95,7 +95,8 @@ def test_migration_v1_to_v2(v1_collection_with_notes: ColFixture) -> None:
 	}
 
 	migrated_notes = [
-		col.getNote(nid) for nid in col.find_notes(col.build_search_string(SearchNode(note="AnkiTune")))
+		col.getNote(nid)
+		for nid in col.find_notes(col.build_search_string(SearchNode(note="AnkiTune")))
 	]
 	actual_cooleys_v2 = next(c for c in migrated_notes if c["Name"] == "Cooleys")
 	assert dict(actual_cooleys_v2.items()) == expected_cooleys_v2
@@ -140,7 +141,8 @@ def test_migration_v1_to_v2_no_key(empty_collection: ACollection) -> None:
 	}
 
 	migrated_notes = [
-		col.getNote(nid) for nid in col.find_notes(col.build_search_string(SearchNode(note="AnkiTune")))
+		col.getNote(nid)
+		for nid in col.find_notes(col.build_search_string(SearchNode(note="AnkiTune")))
 	]
 	actual_keyless_v2 = next(c for c in migrated_notes if c["Name"] == "Keyless")
 	assert dict(actual_keyless_v2.items()) == expected_keyless_v2
@@ -167,7 +169,9 @@ def test_migration_data_integrity(v1_collection_with_notes: ColFixture) -> None:
 	nt = col.models.by_name("AnkiTune")
 	assert nt is not None
 
-	retrieved_note_ids = col.find_notes(col.build_search_string(SearchNode(note="AnkiTune")))
+	retrieved_note_ids = col.find_notes(
+		col.build_search_string(SearchNode(note="AnkiTune"))
+	)
 	assert len(retrieved_note_ids) == len(v1_notes), "Missing notes!"
 
 	card_ids = [

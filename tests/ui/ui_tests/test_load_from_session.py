@@ -60,7 +60,7 @@ def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 
 			def __init__(self, *args: Any, cb: Callable[[], None], **kwargs: Any) -> None:
 				super().__init__(*args, **kwargs)
-				self.cb = cb # type: ignore # https://github.com/python/mypy/issues/2427
+				self.cb = cb  # type: ignore # https://github.com/python/mypy/issues/2427
 
 			def in_a_thread(self) -> None:
 				def get_chooser() -> aqt.studydeck.StudyDeck:
@@ -91,7 +91,7 @@ def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 				try:
 					self.in_a_thread()
 					self.result = True
-					self.cb() # type: ignore # https://github.com/python/mypy/issues/2427
+					self.cb()  # type: ignore # https://github.com/python/mypy/issues/2427
 				except:
 					print_exc()
 					self.result = False
@@ -102,7 +102,6 @@ def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 			def join(self, timeout: Optional[float] = None) -> None:
 				super().join(timeout=timeout)
 				assert self.result is True
-
 
 		with qtbot.wait_callback() as cb:
 

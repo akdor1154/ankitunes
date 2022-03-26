@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 from PyQt5.QtCore import (
-    QMetaObject,
-    QObject,
-    QRegExp,
-    QRunnable,
-    QThread,
-    QTimer,
-    pyqtSignal,
-    pyqtSlot,
-    Qt,
+	QMetaObject,
+	QObject,
+	QRegExp,
+	QRunnable,
+	QThread,
+	QTimer,
+	pyqtSignal,
+	pyqtSlot,
+	Qt,
 )
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QSizePolicy, QWidget

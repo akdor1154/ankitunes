@@ -25,15 +25,17 @@ from . import wait_hook
 
 import unittest.mock
 
+
 def mock_send2trash(d: str) -> None:
 	from send2trash import send2trash as real_send2trash, TrashPermissionError
+
 	try:
 		real_send2trash(d)
 	except TrashPermissionError:
-		print('real send2trash failed, force-removing')
+		print("real send2trash failed, force-removing")
 		import shutil
-		shutil.rmtree(d)
 
+		shutil.rmtree(d)
 
 
 @contextmanager
@@ -61,14 +63,14 @@ def temporary_user(
 
 	# disable anki's update check
 	pm.load(name)
-	pm.meta['updates'] = False
+	pm.meta["updates"] = False
 	pm.save()
 
 	try:
 		yield pm, name
 	finally:
 		# cleanup
-		with unittest.mock.patch('aqt.profiles.send2trash', mock_send2trash):
+		with unittest.mock.patch("aqt.profiles.send2trash", mock_send2trash):
 			pm.remove(name)
 		ProfileManager.setDefaultLang = original  # type: ignore
 
