@@ -1,3 +1,4 @@
+from __future__ import annotations
 import aqt
 import aqt.gui_hooks
 from aqt.qt import debug
@@ -7,8 +8,6 @@ from anki.collection import SearchNode, Collection as AnkiCollection
 
 import aqt.reviewer
 import anki.collection
-import anki.sched
-import anki.schedv2
 
 import os
 import random
@@ -19,8 +18,12 @@ from .errors import error, ErrorMode
 from .util import mw
 from .col_note_type import is_ankitunes_nt, NoteFields
 
+if TYPE_CHECKING:
+	import anki.scheduler.v1
+	import anki.scheduler.v2
+
 HTML = NewType("HTML", str)
-Scheduler = Union[anki.sched.Scheduler, anki.schedv2.Scheduler]
+Scheduler = Union[anki.scheduler.v1.Scheduler, anki.scheduler.v2.Scheduler]
 
 
 class FocusCardProtocol(Protocol):
@@ -125,7 +128,7 @@ def turn_card_into_set(
 
 
 def format_set_question(cards: Sequence[Card]) -> HTML:
-	return HTML("\n".join(card.q() for card in cards))
+	return HTML("\n".join(card.question() for card in cards))
 
 
 def on_card_will_show_qn(
@@ -140,7 +143,7 @@ def on_card_will_show_qn(
 		return HTML(q)
 	if show_type != "reviewQuestion":
 		return HTML(q)
-	if not is_ankitunes_nt(card.model()):
+	if not is_ankitunes_nt(card.note_type()):
 		return HTML(q)
 
 	# for testing..

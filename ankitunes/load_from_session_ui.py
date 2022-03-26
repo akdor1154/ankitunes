@@ -190,7 +190,7 @@ class MyAddCards(AddCards):
 
 			note = self.editor.note
 			assert note is not None, "Got a tune, but editor.note was None"
-			nt = note.model()
+			nt = note.note_type()
 			if nt is None or not col_note_type.is_ankitunes_nt(nt):
 				print("Got a tune, but the Editor's note wasn't of the Ankitunes note type")
 				return

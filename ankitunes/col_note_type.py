@@ -182,7 +182,7 @@ class TNTMigrator:
 		if nt is not None:
 			raise Exception("migration invariant check 2 failed!")
 
-		existing_nt = self.mn.byName(TNT_NAME)
+		existing_nt = self.mn.by_name(TNT_NAME)
 		if existing_nt is not None:
 			return Err(MigrationErr.NameTaken(TNT_NAME))
 

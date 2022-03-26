@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from anki.notes import Note
 
 import aqt
@@ -13,6 +15,8 @@ import os
 
 from .. import wait_hook
 from .data import notes
+
+from anki.decks import DeckId
 
 SHITTY_WAIT_MS = 200
 
@@ -37,9 +41,9 @@ def test_ui(anki_running: aqt.AnkiApp, qtbot: QtBot) -> None:
 
 	assert nt is not None
 
-	deck = col.decks.byName("Tunes")
+	deck = col.decks.by_name("Tunes")
 	assert deck is not None
-	deck_id: int = deck["id"]
+	deck_id = DeckId(deck["id"])
 
 	# move to deck browser and wait
 	with wait_hook(qtbot, aqt.gui_hooks.deck_browser_did_render):

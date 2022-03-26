@@ -33,7 +33,7 @@ TNT_NAME = "AnkiTune"
 
 @contextlib.contextmanager
 def setupNoteType(mn: ModelManager) -> Generator[NoteType, None, None]:
-	basic = mn.byName("Basic")
+	basic = mn.by_name("Basic")
 	assert basic is not None
 	nt = mn.copy(basic)
 	yield nt
@@ -106,7 +106,7 @@ def test_migrate_version(mn: ModelManager, version: NT.TNTVersion) -> None:
 		mn.save(cast(NoteType, _nt))
 		mn.col.save()
 
-	nt = mn.byName(TNT_NAME)
+	nt = mn.by_name(TNT_NAME)
 
 	assert m.get_current_version() == Ok((version, nt))
 
@@ -116,7 +116,7 @@ def test_migrate(mn: ModelManager) -> None:
 
 	m.setup_tune_note_type()
 
-	nt = mn.byName(TNT_NAME)
+	nt = mn.by_name(TNT_NAME)
 	assert m.get_current_version() == Ok((NT.TNTVersion.V2, nt))
 
 	assert nt is not None

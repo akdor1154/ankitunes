@@ -41,7 +41,7 @@ def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 
 	nt = ankitunes.col_note_type.get_ankitunes_nt(col.models)
 
-	deck = col.decks.byName("Tunes")
+	deck = col.decks.by_name("Tunes")
 	assert deck is not None
 	deck_id: int = deck["id"]
 
@@ -56,11 +56,11 @@ def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 		class DealWithStupidBlockingDialog(threading.Thread):
 			result: Optional[bool] = None
 			chooser: Optional[aqt.studydeck.StudyDeck] = None
-			cb: Callable[[], None] = None
+			cb: Callable[[], None]
 
-			def __init__(self, *args, cb, **kwargs):
+			def __init__(self, *args: Any, cb: Callable[[], None], **kwargs: Any) -> None:
 				super().__init__(*args, **kwargs)
-				self.cb = cb
+				self.cb = cb # type: ignore # https://github.com/python/mypy/issues/2427
 
 			def in_a_thread(self) -> None:
 				def get_chooser() -> aqt.studydeck.StudyDeck:
@@ -91,7 +91,7 @@ def test_load_from_session_ui(anki_running: None, qtbot: QtBot) -> None:
 				try:
 					self.in_a_thread()
 					self.result = True
-					self.cb()
+					self.cb() # type: ignore # https://github.com/python/mypy/issues/2427
 				except:
 					print_exc()
 					self.result = False

@@ -25,7 +25,7 @@ from . import wait_hook
 
 import unittest.mock
 
-def mock_send2trash(d):
+def mock_send2trash(d: str) -> None:
 	from send2trash import send2trash as real_send2trash, TrashPermissionError
 	try:
 		real_send2trash(d)

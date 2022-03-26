@@ -17,7 +17,7 @@ mistune = {version = "2.0.0-rc1", optional = true, extras = ["publish"]}
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
 aqt = "^2.1.49"
-mypy = "^0.910"
+mypy = "^0.942"
 pytest-qt = "^4.0.0"
 tan = "^20.8.4"
 
@@ -49,6 +49,7 @@ implicit_reexport = true
 
 [[tool.mypy.overrides]]
 module = [
-	"pytestqt.*"
+	"pytestqt.*",
+	"send2trash"
 ]
 ignore_missing_imports = true

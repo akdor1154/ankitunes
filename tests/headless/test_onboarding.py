@@ -8,7 +8,7 @@ def test_empty_profile(empty_collection: AnkiCollection) -> None:
 	col = empty_collection
 	onboard(col)
 
-	deck = col.decks.byName("Tunes")
+	deck = col.decks.by_name("Tunes")
 	assert deck is not None
 
 	note_ids = col.find_notes(col.build_search_string(SearchNode(deck=deck["name"])))
@@ -36,7 +36,7 @@ def test_profile_with_deck_and_cards(empty_collection: AnkiCollection) -> None:
 	deck = col.decks.get(deck_id)
 	assert deck is not None
 
-	default_model = col.models.byName("Basic")
+	default_model = col.models.by_name("Basic")
 
 	note = anki.notes.Note(col, default_model)
 	note["Front"] = "front"
@@ -60,7 +60,7 @@ def test_empty_profile_deck_config(empty_collection: AnkiCollection) -> None:
 	col = empty_collection
 	onboard(col)
 
-	deck = col.decks.byName("Tunes")
+	deck = col.decks.by_name("Tunes")
 	assert deck is not None
 
 	conf = col.decks.confForDid(deck["id"])
@@ -82,7 +82,7 @@ def test_profile_existing_deck_config(empty_collection: AnkiCollection) -> None:
 
 	onboard(col)
 
-	deck = col.decks.byName("Tunes")
+	deck = col.decks.by_name("Tunes")
 	assert deck is not None
 
 	conf = col.decks.confForDid(deck["id"])
@@ -111,7 +111,7 @@ def test_profile_existing_linked_deck_config(empty_collection: AnkiCollection) -
 
 	onboard(col)
 
-	deck = col.decks.byName("Tunes")
+	deck = col.decks.by_name("Tunes")
 	assert deck is not None
 
 	conf = col.decks.confForDid(deck["id"])

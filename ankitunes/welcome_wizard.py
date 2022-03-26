@@ -10,12 +10,12 @@ import aqt.gui_hooks
 import aqt
 
 if TYPE_CHECKING:
-	from anki.decks import DeckConfigDict
+	from anki.decks import DeckConfigDict, DeckId
 
 DECK_NAME = "Tunes"
 
 
-def setup_deck(col: AnkiCollection, deck_id: Optional[int] = None) -> int:
+def setup_deck(col: AnkiCollection, deck_id: Optional[DeckId] = None) -> DeckId:
 
 	if deck_id is None:
 		# create deck
@@ -78,7 +78,7 @@ def not_none(thing: Optional[T]) -> T:
 	return thing
 
 
-def setup_cards(col: AnkiCollection, deck_id: int) -> None:
+def setup_cards(col: AnkiCollection, deck_id: DeckId) -> None:
 
 	deck: Dict[str, Any] = not_none(col.decks.get(deck_id, default=False))
 

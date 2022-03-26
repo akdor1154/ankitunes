@@ -36,7 +36,7 @@ def mn(empty_collection: AnkiCollection) -> ModelManager:
 
 @contextlib.contextmanager
 def setupNoteType(mn: ModelManager) -> Generator[NoteType, None, None]:
-	basic = mn.byName("Basic")
+	basic = mn.by_name("Basic")
 	assert basic is not None
 	nt = mn.copy(basic)
 	yield nt
@@ -60,10 +60,10 @@ def initialized_collection(
 
 	m = NT.TNTMigrator(mn)
 
-	basic_nt = mn.byName("Basic")
+	basic_nt = mn.by_name("Basic")
 	assert basic_nt is not None
 
-	ankitunes_nt = mn.byName(
+	ankitunes_nt = mn.by_name(
 		"AnkiTune"
 	)  # TODO: will need to change if TNT_NAME becomes configurable
 	assert ankitunes_nt is not None

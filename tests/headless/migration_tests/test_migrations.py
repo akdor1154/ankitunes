@@ -160,11 +160,11 @@ def test_migration_data_integrity(v1_collection_with_notes: ColFixture) -> None:
 	migrator.setup_tune_note_type()
 
 	# save
-	nt = col.models.byName("AnkiTune")
+	nt = col.models.by_name("AnkiTune")
 	col.save()
 
 	# retrieve
-	nt = col.models.byName("AnkiTune")
+	nt = col.models.by_name("AnkiTune")
 	assert nt is not None
 
 	retrieved_note_ids = col.find_notes(col.build_search_string(SearchNode(note="AnkiTune")))
@@ -180,7 +180,7 @@ def test_migration_data_integrity(v1_collection_with_notes: ColFixture) -> None:
 
 	for originalNote in v1_notes:
 		retrievedNote = next(n for n in retrieved_notes if n["Name"] == originalNote["Name"])
-		assert retrievedNote.model() == nt
+		assert retrievedNote.note_type() == nt
 
 	for card in cards:
 		assert card.ord == nt["tmpls"][0]["ord"]
